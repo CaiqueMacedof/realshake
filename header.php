@@ -61,6 +61,10 @@
 	<script src="plugins/datatables/jquery.dataTables.min.js"></script>
 	<script src="plugins/datatables/dataTables.bootstrap.min.js"></script>
 
+	<!-- Gráficos CHARTJS -->
+	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js" />-->
+	<script src="plugins/chartjs/Chart.min.js" />
+	
 	<link rel="stylesheet" href="plugins/jQueryUI/jquery-ui.css"></script>
 	<!-- Bootstrap 3.3.6 -->
 	<script src="bootstrap/js/bootstrap.min.js"></script>
@@ -105,17 +109,21 @@
       <ul class="sidebar-menu">
         <li class="header">Menu de Navegação</li>
         
-    	<li class="treeview">
-          <a href="#"><i class="fa fa-area-chart"></i> <span>Dashboard</span>
-            <span class="pull-right-container">
+    	<li id="1" class="treeview">
+          <a href="index.php"><i class="fa fa-area-chart"></i> <span>Dashboard</span>
+           <!--
+           <span class="pull-right-container">
               <i class="fa fa-angle-left pull-right"></i>
             </span>
+            -->
           </a>
+          <!--
           <ul class="treeview-menu">
             <li><a href="#">Movimento de Clientes</a></li>
             <li><a href="#">Origem de Clientes</a></li>
-      	<li><a href="#">Tipo de Acesso</a></li>
+      		<li><a href="#">Tipo de Acesso</a></li>
           </ul>
+          -->
         </li>
     
     	<li id="2" class="treeview">

@@ -30,6 +30,7 @@ function insertCliente($conn, $nome, $email, $celular, $data_nasc, $origem, $sex
 		return false;
 }
 
+
 function listaCliente($conn, $id_cliente = NULL, $nome = NULL, $celular = NULL, $data_nasc_ini = NULL, $data_nasc_fim = NULL)
 {
 	$query = "SELECT 
@@ -319,7 +320,7 @@ function totalQtdVendaAcesso($conn, $nome = FALSE, $dataHora_inicio = FALSE, $da
 function buscarTopFrequencia($conn, $id_clientes = false, $inicio = false, $fim = false)
 {
 	$query = "	SELECT
-					c.id_cliente,
+					c.id_cliente as ID_CLIENTE,
 					c.nome,
 					c.sexo,
 					COUNT(ba.id_cliente) AS total_frequencia
@@ -335,8 +336,7 @@ function buscarTopFrequencia($conn, $id_clientes = false, $inicio = false, $fim 
 		$query .= " AND ba.data_hora_baixa_acesso BETWEEN '$inicio 00:00:00' AND '$fim' ";
 	
 	$query .= " GROUP BY id_cliente
-			   ORDER BY total_frequencia
-			   DESC LIMIT 12";
+			   ORDER BY total_frequencia";
 	
 	$resultado = mysqli_query($conn, $query);
 	if($resultado != false)
@@ -362,4 +362,51 @@ function frequenciaHoje($conn, $dataHoje)
 		return mysqli_fetch_all_mod($resultado);
 	else
 		return false;
+}
+
+function buscarNaoFrequencia($conn, $id_clientes = false)
+{
+	$query = "	SELECT
+					c.id_cliente,
+					c.nome,
+					c.sexo
+				FROM baixa_acesso  AS ba
+				INNER JOIN cliente AS c
+				ON ba.id_cliente = c.id_cliente
+				WHERE 1 = 1";
+
+	if($id_clientes != false)
+		$query .= " AND c.id_cliente NOT IN($id_clientes)";
+		 
+	$query .= " GROUP BY id_cliente";
+	
+	$resultado = mysqli_query($conn, $query);
+	if($resultado != false)
+		return mysqli_fetch_all_mod($resultado);
+	else
+		return false;
+}
+
+function concatenar($array)
+{
+	if(is_array($array) && count($array) > 0)
+	{
+		$i	 	 = 1;
+		$retorno = "";
+	
+		foreach ($array as $a)
+		{
+			//Não coloca virgula no ultimo loop;
+			if(count($array) == $i)
+				$retorno .= $a['ID_CLIENTE'];
+			else
+				$retorno .= $a['ID_CLIENTE'] . ", ";
+						
+			$i++;
+		}
+	}
+	else
+		return false;
+	
+	return $retorno;
 }
