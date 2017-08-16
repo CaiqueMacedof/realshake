@@ -335,7 +335,7 @@ $(document).ready(function(){
 		
 		$.ajax
 		({
-			url: "listaAcesso.php",
+			url: "ajax_lista_acesso.php",
 			data: {id_cliente: id},
 			success: function(retorno)
 			{

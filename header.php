@@ -35,8 +35,8 @@
 	<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
 	<!-- Font Awesome -->
 	<link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
-	<!-- Ionicons 
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.min.css">
+	<!-- Ionicons -->
+ 	<link rel="stylesheet" href="bower_components/Ionicons/css/ionicons.min.css">
 	<!-- Theme style -->
 	<link rel="stylesheet" href="dist/css/AdminLTE.css">
 	<!-- daterange picker -->
@@ -63,7 +63,14 @@
 
 	<!-- Gráficos CHARTJS -->
 	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js" />-->
-	<script src="plugins/chartjs/Chart.min.js" />
+	<!-- <script src="plugins/chartjs/Chart.min.js" /> -->
+	<script src="js/hightcharts.js"></script>
+	<script src="https://www.amcharts.com/lib/3/amcharts.js"></script>
+	<script src="https://www.amcharts.com/lib/3/pie.js"></script>
+	<script src="https://www.amcharts.com/lib/3/plugins/export/export.min.js"></script>
+	<link rel="stylesheet" href="https://www.amcharts.com/lib/3/plugins/export/export.css" type="text/css" media="all" />
+	<script src="https://www.amcharts.com/lib/3/themes/dark.js"></script>
+	
 	
 	<link rel="stylesheet" href="plugins/jQueryUI/jquery-ui.css"></script>
 	<!-- Bootstrap 3.3.6 -->
@@ -137,6 +144,14 @@
             <li id="2-2"><a href="acesso_rapido.php">Acesso rápido</a></li>
             <li id="2-3"><a href="clientes_historico.php">Histórico de Compra</a></li>
           </ul>
+        </li>
+    	
+    	<li id="2" class="treeview">
+          <a href="#"><i class="fa fa-shopping-bag"></i><span>Produtos</span></a>
+        </li>
+        
+        <li id="2" class="treeview">
+          <a href="#"><i class="fa fa-cog"></i><span>Configurações</span></a>
         </li>
         
       	<li class="treeview">

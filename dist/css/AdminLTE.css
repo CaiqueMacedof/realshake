@@ -12,7 +12,7 @@
  */
 html,
 body {
-  height: 100%;
+  height: 100%!important;
 }
 .layout-boxed html,
 .layout-boxed body {
@@ -39,13 +39,7 @@ body {
 .wrapper:after {
   clear: both;
 }
-.layout-boxed .wrapper {
-  max-width: 1250px;
-  margin: 0 auto;
-  min-height: 100%;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
-  position: relative;
-}
+
 .layout-boxed {
   background: url('../img/boxed-bg.jpg') repeat fixed;
 }
@@ -4441,7 +4435,7 @@ table.text-center th {
 .alert-info,
 .label-info,
 .modal-info .modal-body {
- /* background-color: #00c0ef !important;*/
+ background-color: #00c0ef !important;
 }
 .bg-blue {
   background-color: #0073b7 !important;

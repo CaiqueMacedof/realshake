@@ -79,14 +79,14 @@
 			
 			break;
 	}
-		
-	//Busca a frequencia de todos os clientes do dia atual;
-	$frequenciaHoje = frequenciaHoje($conn, date("Y-m-d"));
+	$dias_semana = array(0 => "Domingo",
+						 1 => "Segunda-feira",
+						 2 => "Terça-feira",
+						 3 => "Quarta-feira",
+						 4 => "Quinta-feira",
+						 5 => "Sexta-feira",
+						 6 => "Sabado");
 	
-	//Concatena todos os ids;
-	$ids_cliente = concatenar($frequenciaHoje);
-	//$PDS = primeiro dia da semana
-	//Pega o numero da semana atual e depois calcula pra pegar a a data de segunda feira, toda semana.
 	if(date("w", strtotime(date("Y-m-d"))) == 0)
 	{
 		$dataHoje  = date("Y-m-d h:m:s");
@@ -99,13 +99,20 @@
 		$inicio    = date("Y-m-d", strtotime($dataHoje . " -$diaNumSemana days"));
 	}
 	
+	$inicioSemana   = date("d/m/Y", strtotime($inicio));
+	$atualSemana    = date("d/m/Y", strtotime($dataHoje));
+	$dia_inicio 	= date("w", strtotime($inicio));
+	$dia_final  	= date("w", strtotime($dataHoje));
+	
+	//Busca a frequencia de todos os clientes do dia atual;
+	$frequenciaHoje = frequenciaHoje($conn, date("Y-m-d"));
+	
+	//Concatena todos os ids;
+	$ids_cliente = concatenar($frequenciaHoje);
 	$topFrequencias = buscarTopFrequencia($conn, $ids_cliente, $inicio, $dataHoje);
 	//Concatena todos os ids;
 	$ids_cliente = concatenar($topFrequencias);
 	$nãoFrequencias = buscarNaoFrequencia($conn, $ids_cliente);
-
-	$inicioSemana   = date("d/m/Y", strtotime($inicio));
-	$atualSemana    = date("d/m/Y", strtotime($dataHoje));
 ?>
 <style>
 	
@@ -195,7 +202,7 @@
 <section class="content-header">
   <h1>
     Acesso Rápido
-    <small>Frequências semanais do dia <span style="color: #4a4a4a;font-weight:bold;"><?php echo "$inicioSemana à $atualSemana"?></span></small>
+    <small>Frequências semanais do dia <span style="color: #4a4a4a;font-weight:bold;"><?php echo "$dias_semana[$dia_inicio] ($inicioSemana) à $dias_semana[$dia_final] ($atualSemana)"?></span></small>
   </h1>
 </section>
 
@@ -210,65 +217,67 @@
 			echo "</div>";
 		}	
 	?>
-	
 <section class="content">
-	<section class="content">
-		<?php 
-			if(is_array($topFrequencias) && count($topFrequencias) > 0)
-			{
-				$i = 0;
-				foreach ($topFrequencias as $topFrequencia)
+	<div class="row">
+	    <div class="col-xs-12">
+	        <div class="box box-danger" style="padding-top:15px;">
+		        <?php 
+				if(is_array($topFrequencias) && count($topFrequencias) > 0)
 				{
-					//Busca os avatares masculinos, senão busca os feminino
-					$imagem = buscarAvatar($topFrequencia['sexo']);
-					//Busca as cores
-					$cor = buscarCor($i);
-					
-					if($topFrequencia['total_frequencia'] == 1)
-						$texto = "1 Frequência";
-					else
-						$texto = $topFrequencia['total_frequencia'] . " Frequências";
-					
-					echo "	<div class='col-lg-3 col-xs-6'>
-								<div data-toggle='modal' data-target='#acesso_rapido' class='small-box bg-aqua' data-cliente='$topFrequencia[ID_CLIENTE]' style='background: $cor!important'>
-									<div class='inner' style='max-width: 70%;'>
-										<h4>$topFrequencia[nome]</h4>
-										<p>$texto</p>
-									</div>
-									<div class='box-img'>
-										<img src='img/avatares/$imagem'>
-									</div>
-								</div>
-							</div>";
-					
-					$i++;
-				}
-			}
-			
-			if(is_array($nãoFrequencias) && count($nãoFrequencias) > 0)
-			{
-				$i = 0;
-				foreach ($nãoFrequencias as $nãoFrequencia)
-				{
-					//Busca os avatares masculinos, senão busca os feminino
-					$imagem = buscarAvatar($nãoFrequencia['sexo']);
+					$i = 0;
+					foreach ($topFrequencias as $topFrequencia)
+					{
+						//Busca os avatares masculinos, senão busca os feminino
+						$imagem = buscarAvatar($topFrequencia['sexo']);
+						//Busca as cores
+						$cor = buscarCor($i);
 						
-					echo "	<div class='col-lg-3 col-xs-6'>
-							<div data-toggle='modal' class='small-box bg-aqua' data-cliente='$nãoFrequencia[id_cliente]' style='background: #d4d4d4!important;cursor: auto;'>
-							<div class='inner' style='max-width: 70%;'>
-							<h4>$nãoFrequencia[nome]</h4>
-							</div>
-							<div class='box-img' style='opacity: 0.5;'>
-							<img src='img/avatares/$imagem'>
-							</div>
-							</div>
-							</div>";
-								
-							$i++;
+						if($topFrequencia['total_frequencia'] == 1)
+							$texto = "1 Frequência";
+						else
+							$texto = $topFrequencia['total_frequencia'] . " Frequências";
+						
+						echo "	<div class='col-lg-3 col-xs-6'>
+									<div data-toggle='modal' data-target='#acesso_rapido' class='small-box bg-aqua' data-cliente='$topFrequencia[ID_CLIENTE]' style='background: $cor!important'>
+										<div class='inner' style='max-width: 70%;'>
+											<h4>$topFrequencia[nome]</h4>
+											<p>$texto</p>
+										</div>
+										<div class='box-img'>
+											<img src='img/avatares/$imagem'>
+										</div>
+									</div>
+								</div>";
+						$i++;
+					}
 				}
-			}
-		?>
-	</section>
+				
+				if(is_array($nãoFrequencias) && count($nãoFrequencias) > 0)
+				{
+					$i = 0;
+					foreach ($nãoFrequencias as $nãoFrequencia)
+					{
+						//Busca os avatares masculinos, senão busca os feminino
+						$imagem = buscarAvatar($nãoFrequencia['sexo']);
+							
+						echo "	<div class='col-lg-3 col-xs-6'>
+								<div data-toggle='modal' class='small-box bg-aqua' data-cliente='$nãoFrequencia[id_cliente]' style='background: #d4d4d4!important;cursor: auto;'>
+								<div class='inner' style='max-width: 70%;'>
+								<h4>$nãoFrequencia[nome]</h4>
+								</div>
+								<div class='box-img' style='opacity: 0.5;'>
+								<img src='img/avatares/$imagem'>
+								</div>
+								</div>
+								</div>";
+									
+								$i++;
+					}
+				}
+			?>
+	        </div>
+	    </div>
+	</div>
 </section>
 <?php 
 require_once("footer.php");
