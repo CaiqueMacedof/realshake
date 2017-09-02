@@ -164,7 +164,7 @@
 		case 'inserir':
 			
 			$id_cliente = isset($_REQUEST['id_cliente']) ? $_REQUEST['id_cliente'] : null;
-			
+	
 			if($tipo_venda_baixa == "" || empty($id_tipo_acesso)|| empty($qtd_acesso))
 			{
 				$msg = "[AVISO] Por favor preencher todos os campos do cadastro!";
@@ -329,7 +329,7 @@ $(document).ready(function(){
   $('#datepicker').datepicker({
     autoclose: true
   });
-
+	
 	$(".deletar-cliente").click(function(){
 		var id = $(this).data("id");
 
@@ -420,7 +420,7 @@ $(document).ready(function(){
 		parent.css("display", "none");
 	});
 
-	$(".bota_add_acesso").click(function(){
+	$(".btn_add_acesso").click(function(){
 		var qtd_botao = $(this).val();
 		var qtd_input = parseInt($(".input-qtd-acesso").val()) || 0;
 
@@ -428,8 +428,40 @@ $(document).ready(function(){
 		//SETO OS VALORES NO INPUT DOS ACESSO
 		$(".input-qtd-acesso").val(total);
 	});
+
+	$(".btn-consumo").click(function(){
+		if($(this).hasClass("btn-selected"))
+		{
+			$(this).removeClass("btn-selected");
+			$(".input_hidden").attr("value", '');
+		}
+		else
+		{
+			if($(".btn-consumo").next().hasClass("btn-selected"))
+			{
+				$(".btn-consumo").next().removeClass("btn-selected")
+				$(".input_hidden").attr("value", '');
+			}
+			else if($(".btn-consumo").before().hasClass("btn-selected"))
+			{
+				$(".btn-consumo").before().removeClass("btn-selected");
+				$(".input_hidden").attr("value", '');
+			}
+				
+			$(this).addClass("btn-selected");
+			$(".input_hidden").attr("value", $(this).val());
+		}
+	});
 });
 </script>
+
+<style>
+	.btn_add_acesso, .btn-consumo
+	{
+		padding: 5px;
+		font-weight: bold;
+	}
+</style>
 
 <!-- Content Header (Page header) -->
 <section class="content-header">
@@ -494,9 +526,9 @@ $(document).ready(function(){
                   		<input class="form-control verifica input-qtd-acesso" type="text" name="qtd_acesso" value="0"
                   			style="border: none;font-size: 45px;padding: 5px 0;margin-bottom: 30px;" />
                   			
-                  		<button type="button" class="col-lg-4 col-xs-4 col-sm-4 bota_add_acesso" value="1">+1</button>
-                  		<button type="button" class="col-lg-4 col-xs-4 col-sm-4 bota_add_acesso" value="3">+3</button>
-                  		<button type="button" class="col-lg-4 col-xs-4 col-sm-4 bota_add_acesso" value="5">+5</button>
+                  		<button type="button" class="col-lg-4 col-xs-4 col-sm-4 btn_add_acesso" value="1">+1</button>
+                  		<button type="button" class="col-lg-4 col-xs-4 col-sm-4 btn_add_acesso" value="3">+3</button>
+                  		<button type="button" class="col-lg-4 col-xs-4 col-sm-4 btn_add_acesso" value="5">+5</button>
                   	</div>
                   	
 	                <div class="form-group col-xs-12">
@@ -526,11 +558,9 @@ $(document).ready(function(){
 		                </label>
 	                	
 	                	<div>
-		                  	<input type="radio" name="tipo_venda_baixa" value="0" class="minimal verifica" style="width:20px;height:20px;">
-			                Compra
-		                  	
-		                  	<input type="radio" name="tipo_venda_baixa" value="1" class="minimal verifica" style="width:20px;height:20px;margin-left: 20px;">
-	                  		Consumo
+	                		<input type="hidden" name="tipo_venda_baixa" class="input_hidden">
+	                		<button type="button" value="0" class="col-lg-6 col-xs-6 col-sm-6 btn-consumo text-green"><i class="fa fa-caret-up text-green"></i>&nbsp Consumo</button>
+                  			<button type="button" value="1" class="col-lg-6 col-xs-6 col-sm-6 btn-consumo text-red"><i class="fa fa-caret-down text-red"></i>&nbsp Baixa</button>
 	                	</div>
               		</div>
               		
@@ -726,20 +756,20 @@ $(document).ready(function(){
                 <td><?php echo $cliente['NOME']; ?></td>
                 <td align="center" class="esconde_coluna"><?php echo $cliente['CELULAR']; ?></td>
                 <td align="center">
-                	<i class="fa fa-calendar" aria-hidden="true"></i>
+                	<i class="fa fa-calendar style_icon" aria-hidden="true"></i>
                 </td>
                 <td align="center">
-                	<i class="fa fa-list-alt" aria-hidden="true" data-toggle="modal" data-target="#cadastro-acesso"
+                	<i class="fa fa-list-alt style_icon" aria-hidden="true" data-toggle="modal" data-target="#cadastro-acesso"
                 		data-nome="<?php echo $cliente['NOME']; ?>" data-cliente="<?php echo $cliente['ID_CLIENTE']; ?>"></i>
                 </td>
                 
                 <td align="center">
                 	<a href="cliente.php?acao=editar&id_cliente=<?php echo $cliente['ID_CLIENTE'];?>">
-                	<i class="fa fa-pencil" aria-hidden="true"></i>
+                	<i class="fa fa-pencil style_icon" aria-hidden="true"></i>
                 </td>
                 
                 <td align="center">
-                	<i class="fa fa-times deletar-cliente" style="color: red;" aria-hidden="true"  data-toggle="modal" data-target="#alerta" 
+                	<i class="fa fa-times deletar-cliente style_icon" style="color: red;" aria-hidden="true"  data-toggle="modal" data-target="#alerta" 
                 		data-id="<?php echo $cliente['ID_CLIENTE']; ?>"></i>
                 </td>
               </tr>

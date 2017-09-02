@@ -10,10 +10,7 @@ body
 	margin-right: 25px;
 }
 
-.fa-calendar,
-.fa-list-alt,
-.fa-pencil,
-.fa-times
+.style_icon
 {
 	font-size: 20px!important;
 	cursor: pointer;
@@ -39,6 +36,10 @@ body
     justify-content: center;	
 }
 
+.btn-selected
+{
+	background: rgba(0,0,0,0.2);
+}
 
 /* CSS da tela de login apenas*/
 

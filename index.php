@@ -169,6 +169,14 @@ $(function () {
 	  });
 });
 </script>
+
+<style>
+	.icon-size
+	{
+		font-size: 60px;
+	}
+</style>
+
 <!-- Content Header (Page header) -->
 <section class="content-header">
   <h1>
@@ -177,8 +185,6 @@ $(function () {
   </h1>
 </section>
 
-
-      
 <section class="content">
 	<div class="row">
 		<div class="col-lg-3 col-xs-6">
@@ -204,7 +210,7 @@ $(function () {
 				</div>
 				
 				<div class="icon">
-					<i class=""></i>
+					<i class="fa fa-list-alt icon-size"></i>
 				</div>
 				
 				<a href="#" class="small-box-footer"></a>
@@ -219,7 +225,7 @@ $(function () {
 				</div>
 				
 				<div class="icon">
-					<i class=""></i>
+					<i class="fa fa-thumbs-o-down icon-size"></i>
 				</div>
 				
 				<a href="#" class="small-box-footer"></a>
@@ -234,7 +240,7 @@ $(function () {
 				</div>
 				
 				<div class="icon">
-					<i class=""></i>
+					<i class="fa fa-dollar icon-size"></i>
 				</div> 
 				
 				<a href="#" class="small-box-footer"></a>
