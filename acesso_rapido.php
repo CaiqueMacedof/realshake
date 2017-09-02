@@ -7,7 +7,7 @@
 	
 	$action	  	  		= isset($_REQUEST['acao']) 				? $_REQUEST['acao'] 	 		: "";
 	$erro	  	  		= isset($_REQUEST['erro']) 				? $_REQUEST['erro'] 	 		: "";
-	$tipo 				= isset($_REQUEST['tipo']) 				? $_REQUEST['tipo'] 			: null;
+	$id_tipo_acesso 	= isset($_REQUEST['id_tipo_acesso']) 	? $_REQUEST['id_tipo_acesso'] 	: null;
 	$tipo_venda_baixa 	= isset($_REQUEST['tipo_venda_baixa']) 	? $_REQUEST['tipo_venda_baixa'] : null;
 	$qtd_acesso 		= isset($_REQUEST['qtd_acesso']) 		? $_REQUEST['qtd_acesso'] 		: "";
 	
@@ -17,8 +17,7 @@
 				
 			$id_cliente = isset($_REQUEST['id_cliente']) ? $_REQUEST['id_cliente'] : null;
 			
-				
-			if($tipo_venda_baixa == "" || empty($tipo)|| empty($qtd_acesso))
+			if($tipo_venda_baixa == "" || empty($id_tipo_acesso)|| empty($qtd_acesso))
 			{
 				$msg = "[AVISO] Por favor preencher todos os campos do cadastro!";
 				header("location: acesso_rapido.php?msg=$msg&erro=1");
@@ -35,15 +34,43 @@
 			//INSERE ACESSO
 			if($tipo_venda_baixa == 0)
 			{
+				$acesso = listaAcesso($conn, $id_cliente, $id_tipo_acesso);
+			
+				$qtd_acessos = ($acesso['total'] + $qtd_acesso) - $acesso['consumido'];
+			
+				if($qtd_acessos < 0)
+				{
+					$qtd_acessos = $qtd_acessos * -1;
+					$valor_total = retornar_preço_total_acesso($conn, $id_tipo_acesso, $qtd_acessos);
+						
+					replace_cliente_pendente($conn, $id_cliente, $id_tipo_acesso, $valor_total);
+				}
+				else
+				{
+					deleta_cliente_pendente($conn, $id_cliente);
+				}
+			
 				$tipo_acesso    = lista_tipo_acesso($conn, $id_tipo_acesso);
 				$retorno_insere = insereAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso, $qtd_acesso * $tipo_acesso[0]['valor_tipo_acesso']);
 			}
 			//BAIXA ACESSO
 			else if($tipo_venda_baixa == 1)
 			{
+				$acesso = listaAcesso($conn, $id_cliente, $id_tipo_acesso);
+			
+				//somo o baixa acesso atual + o total que sera inserido, conseguindo saber se havera divergência
+				$qtd_acessos = $acesso['total'] - ($acesso['consumido'] + $qtd_acesso);
+			
+				if($qtd_acessos < 0)
+				{
+					$qtd_acessos = $qtd_acessos * -1;
+					$valor_total = retornar_preço_total_acesso($conn, $id_tipo_acesso, $qtd_acessos);
+			
+					replace_cliente_pendente($conn, $id_cliente, $id_tipo_acesso, $valor_total);
+				}
+			
 				$retorno_baixa = baixaAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso);
 			}
-		
 		
 			if(isset($retorno_insere) && $retorno_insere != false)
 			{
@@ -113,6 +140,7 @@
 	//Concatena todos os ids;
 	$ids_cliente = concatenar($topFrequencias);
 	$nÃ£oFrequencias = buscarNaoFrequencia($conn, $ids_cliente);
+	$tipos_acesso = lista_tipo_acesso($conn);
 ?>
 <style>
 	
@@ -149,10 +177,19 @@
 			//Seta o id do cliente no input type='hidden'.
 			$("#cliente").attr("value", $(this).data("cliente"));
 		});
+
+		$(".bota_add_acesso").click(function(){
+			var qtd_botao = $(this).val();
+			var qtd_input = parseInt($(".input-qtd-acesso").val()) || 0;
+
+			var total = parseInt(qtd_botao) + parseInt(qtd_input);
+			//SETO OS VALORES NO INPUT DOS ACESSO
+			$(".input-qtd-acesso").val(total);
+		});
 	});
 </script>
 
-<!-- Modal inserir Acesso rapido -->
+<!-- Modal inserir Acesso rápido -->
 	<div class="modal  modal-default fade in" id="acesso_rapido" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
 	  <div class="modal-dialog" role="document" style="width: 20%">
 	    <div class="modal-content">
@@ -162,33 +199,77 @@
 	        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 	        <h4 class="modal-title" id="myModalLabel">Acesso Rapido</h4>
 	      </div>
-	      	<div class="modal-body" style="padding: 0;">
-	      	<div class="box-body">
-      			<div class="row">
-      				<div class="form-group col-xs-12" style="margin-bottom: 20px;">
-	                  	<input type="radio" name="tipo_venda_baixa" value="0" class="minimal verifica" style="width:20px;height:20px;">
-		                Compra
+	      	<div class="modal-body">
+		      	<div class="box-body">
+	      			<div class="row">
+	      				<div class="form-group col-xs-12">
+	                  		<!-- <label>Quantidade:</label> -->
+	                  		<input class="form-control verifica input-qtd-acesso" type="text" name="qtd_acesso" value="0"
+	                  			style="border: none;font-size: 45px;padding: 5px 0;margin-bottom: 30px;" />
+	                  			
+	                  		<button type="button" class="col-lg-4 col-xs-4 col-sm-4 bota_add_acesso" value="1">+1</button>
+	                  		<button type="button" class="col-lg-4 col-xs-4 col-sm-4 bota_add_acesso" value="3">+3</button>
+	                  		<button type="button" class="col-lg-4 col-xs-4 col-sm-4 bota_add_acesso" value="5">+5</button>
+	                  	</div>
 	                  	
-	                  	<input type="radio" name="tipo_venda_baixa" value="1" class="minimal verifica"  style="width:20px;height:20px;margin-left: 20px;" checked>
-                  		Baixa
-              		</div>
-      			
-	                <div class="form-group col-xs-12" style="display: flex;justify-content: space-around;">
-			            <input type="checkbox" name="tipo" value="3" class="minimal verifica" style="width:16px;height:16px;">
-			            NutriSoup
+		                <div class="form-group col-xs-12">
+		                  <label>Tipo de acesso:</label>
+		                  <select class="tipo_acesso form-control select2 verifica" name="id_tipo_acesso" style="width: 100%;">
+		                  	<option></option>
+							<?php 
+								if(is_array($tipos_acesso) && count($tipos_acesso) > 0)
+								{
+									foreach ($tipos_acesso as $tipo_acesso)
+									{
+										
+							?>
+										<option value="<?php echo $tipo_acesso['id_tipo_acesso'];?>">
+											<?php echo $tipo_acesso['nome']; ?>
+										</option>
+							<?php 		
+									}
+								}
+							?>
+		              	</select>
+		                </div>
+		                
+		                <div class="form-group col-xs-12">
+		                	<label>
+			                  Acesso
+			                </label>
+		                	
+		                	<div>
+			                  	<input type="radio" name="tipo_venda_baixa" value="0" class="minimal verifica" style="width:20px;height:20px;">
+				                Compra
+			                  	
+			                  	<input type="radio" name="tipo_venda_baixa" value="1" class="minimal verifica" style="width:20px;height:20px;margin-left: 20px;">
+		                  		Consumo
+		                	</div>
+	              		</div>
+	      				<!-- <div class="form-group col-xs-12" style="margin-bottom: 20px;">
+		                  	<input type="radio" name="tipo_venda_baixa" value="0" class="minimal verifica" style="width:20px;height:20px;">
+			                Compra
 		                  	
-		                <input type="checkbox" name="tipo" value="1" class="minimal verifica" style="width:16px;height:16px;margin-left: 20px;">
-			            Shake
-			            
-			            <input type="checkbox" name="tipo" value="2" class="minimal verifica" style="width:16px;height:16px;margin-left: 20px;">
-			            Sopa
-             		</div>
-             		
-             		<div class="form-group col-xs-12">
-                  		<input class="form-control" type="number" name="qtd_acesso" class="form-control" placeholder="Quantidade de acesso">
-                  	</div>
-             	</div>
-             </div>
+		                  	<input type="radio" name="tipo_venda_baixa" value="1" class="minimal verifica"  style="width:20px;height:20px;margin-left: 20px;" checked>
+	                  		Baixa
+	              		</div>
+	      			
+		                <div class="form-group col-xs-12" style="display: flex;justify-content: space-around;">
+				            <input type="checkbox" name="tipo" value="3" class="minimal verifica" style="width:16px;height:16px;">
+				            NutriSoup
+			                  	
+			                <input type="checkbox" name="tipo" value="1" class="minimal verifica" style="width:16px;height:16px;margin-left: 20px;">
+				            Shake
+				            
+				            <input type="checkbox" name="tipo" value="2" class="minimal verifica" style="width:16px;height:16px;margin-left: 20px;">
+				            Sopa
+	             		</div>
+	             		
+	             		<div class="form-group col-xs-12">
+	                  		<input class="form-control" type="number" name="qtd_acesso" class="form-control" placeholder="Quantidade de acesso">
+	                  	</div>-->
+	             	</div>
+	             </div>
              </div>
 	      <div class="modal-footer">
 	        <button type="button" class="btn btn-danger" data-dismiss="modal">Fechar</button>

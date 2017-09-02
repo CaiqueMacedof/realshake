@@ -9,55 +9,28 @@
 
 	if(is_array($clientes) && count($clientes) > 0)//Cliente existe
 	{
-		$colunaTH 	= "";
-		$colunaTD 	= "";
-		$retorno	= "";
-		$shake 		= listaAcesso($conn, $id_cliente, 1);//Consumo Shake;
-		$sopa 		= listaAcesso($conn, $id_cliente, 2);//Consumo Sopa;
-		$nutriSoup 	= listaAcesso($conn, $id_cliente, 3);//Consumo NutriSoup;
-		//var_dump($shake);die;
-		if($nutriSoup[0] != 0 || $nutriSoup[1] != 0)
-		{
-			$colunaTH .= "NutriSoup";
-			$colunaTD .= $nutriSoup[0] . "/" . $nutriSoup[1];
-		}
+		$shakes 	= listaAcesso($conn, $id_cliente, 1);//Consumo Shake;
+		$sopas 		= listaAcesso($conn, $id_cliente, 2);//Consumo Sopa;
+		$nutriSoups = listaAcesso($conn, $id_cliente, 3);//Consumo NutriSoup;
 		
-		if($shake[0] != 0 || $shake[1] != 0)
-		{
-			if($colunaTH == "" || $colunaTD == "")
-			{
-				$colunaTH .=  "Shake";
-				$colunaTD .=  $shake[0] . "/" . $shake[1];
-			}
-			else
-				$colunaTH .= ",Shake";
-				$colunaTD .= "," . $shake[0] . "/" . $shake[1];
-		}
+		if(!empty($shakes[0]) || !empty($shakes[1]))
+			$shake = "$shakes[0]-$shakes[1]";
+		else
+			$shake = 0;
 		
-		if($sopa[0] != 0 || $sopa[1] != 0)
-		{
-			if($colunaTH == "" || $colunaTD == "")
-			{
-				$colunaTH .= "Sopa";
-				$colunaTD .= $sopa[0] . "/" . $sopa[1];
-			}
-			else
-			{
-				$colunaTH .= ",Sopa";
-				$colunaTD .= "," . $sopa[0] . "/" . $sopa[1];
-			}
-		}
+		if(!empty($sopas[0]) || !empty($sopas[1]))
+			$sopa = "$sopas[0]-$sopas[1]";
+		else
+			$sopa = 0;
+				
+		if(!empty($nutriSoups[0]) || !empty($nutriSoups[1]))
+			$nutriSoup = "$nutriSoups[0]-$nutriSoups[1]";
+		else
+			$nutriSoup = 0;
 		
+		$json_acessos = array(1 => $shake, 2 => $sopa, 3 => $nutriSoup);
 		
-		if(($sopa[0] == 0 && $sopa[1] == 0) &&
-				($shake[0] == 0 && $shake[1] == 0) && 
-					($nutriSoup[0] == 0 && $nutriSoup[1] == 0))
-			$retorno = "";
-		else 
-			$retorno = $colunaTH . "@" . $colunaTD;
-
-		echo $retorno;
-		
+		echo json_encode($json_acessos);
 	}
 
 ?>

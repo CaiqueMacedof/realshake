@@ -410,3 +410,70 @@ function concatenar($array)
 	
 	return $retorno;
 }
+
+function replace_cliente_pendente($conn, $id_cliente, $id_tipo_acesso, $valor_total)
+{
+	$query = sprintf("REPLACE INTO cliente_pendente
+				     (id_cliente, id_tipo_acesso, valor_total)
+			 		 VALUES
+					 (%d, %d, %d)",
+				
+			mysqli_real_escape_string($conn, $id_cliente),
+			mysqli_real_escape_string($conn, $id_tipo_acesso),
+			mysqli_real_escape_string($conn, $valor_total));
+
+	$result = mysqli_query($conn, $query);
+	if($result)
+		return 	mysqli_insert_id($result);
+	else
+		return false;
+	
+}
+
+function deleta_cliente_pendente($conn, $id_cliente)
+{
+	$query = sprintf("DELETE FROM cliente_pendente WHERE id_cliente = %d",
+	
+			mysqli_real_escape_string($conn, $id_cliente));
+	
+	$result = mysqli_query($conn, $query);
+	if($result)
+		return 	true;
+	else
+		return false;
+}
+
+function retornar_preço_total_acesso($conn, $id_tipo_acesso, $total)
+{
+	$query  = sprintf("SELECT valor_tipo_acesso * %d as total_valor FROM tipo_acesso WHERE id_tipo_acesso = %d", 
+			
+			  mysqli_real_escape_string($conn, $total),
+			  mysqli_real_escape_string($conn, $id_tipo_acesso));
+	
+	$resultado = mysqli_query($conn, $query);
+	if($resultado !== false)
+	{
+		$array = mysqli_fetch_all_mod($resultado);
+		return $array[0]['total_valor'];
+	}
+	else
+	{
+		return false;
+	}
+}
+
+function total_pendente($conn)
+{
+	$query  = "SELECT SUM(valor_total) AS total FROM cliente_pendente";
+	
+	$resultado = mysqli_query($conn, $query);
+	if($resultado !== false)
+	{
+		$array = mysqli_fetch_all_mod($resultado);
+		return $array[0]['total'];
+	}
+	else
+	{
+		return false;
+	}
+}

@@ -7,20 +7,21 @@ $total 		 		 = totalQtdVendaAcesso($conn);
 $total_venda 		 = number_format($total['total_venda'], 2, ',', '.');
 $venda_baixa_acesso  = total_venda_baixa_acesso($conn);
 $total_acesso 		 = consumoAcessoTotal($conn);
+$total_pendente		 = total_pendente($conn);
 
 $baixa_acessos = retornar_diff_baixa_acesso($conn);
 $venda_acessos = retornar_diff_venda_acesso($conn);
 
 $estatisticas_linhas = frequenciaCliente($conn);
 $valor_periodo 		 = array();
-//Vai de 1 até 12 dos mêses e de acordo com o mês insere os dados;
+//Vai de 1 atÃ© 12 dos mÃªses e de acordo com o mÃªs insere os dados;
 for($key = 1; $key <= 12; $key++)
 {
 	foreach ($estatisticas_linhas as $estatistica_key => $estatistica)
 	{
 		foreach ($estatistica as $value)
 		{
-			//Verifico se o contador $key é igual ao mês, caso seja eu recebo o total dos acesso daquele mês, senão eu entendo que não existe e marco como 0 acessos.
+			//Verifico se o contador $key Ã© igual ao mÃªs, caso seja eu recebo o total dos acesso daquele mÃªs, senÃ£o eu entendo que nÃ£o existe e marco como 0 acessos.
 			if($key == (int)substr($value['data_periodo'], 3, 2))
 			{
 				$valor_periodo[$estatistica_key][$key] = $value['total_acesso_dia'];
@@ -105,7 +106,7 @@ $(function () {
             type: 'pie'
         },
         title: {
-            text: 'Estatísticas Contato'
+            text: 'EstatÃ­sticas Contato'
         },
         tooltip: {
             pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
@@ -127,63 +128,7 @@ $(function () {
         }]
     });
 
-	/*var chart = AmCharts.makeChart("chartdiv", {
-	  "title": "teste",
-	  "type": "pie",
-	  "startDuration": 0,
-	   "theme": "none",
-	  "addClassNames": true,
-	  "legend":{
-	   	"position":"right",
-	    "marginRight":100,
-	    "autoMargins":false
-	  },
-	  "innerRadius": "30%",
-	  "defs": {
-	    "filter": [{
-	      "id": "shadow",
-	      "feOffset": {
-	        "result": "offOut",
-	        "in": "SourceAlpha",
-	        "dx": 0,
-	        "dy": 0
-	      },
-	      "feGaussianBlur": {
-	        "result": "blurOut",
-	        "in": "offOut",
-	        "stdDeviation": 5
-	      },
-	      "feBlend": {
-	        "in": "SourceGraphic",
-	        "in2": "blurOut",
-	        "mode": "normal"
-	      }
-	    }]
-	  },
-	  "dataProvider": [],
-	  "valueField": "litres",
-	  "titleField": "country",
-	  "export": {
-	    "enabled": false
-	  }
-	});
-	
-	chart.addListener("init", handleInit);
-	
-	chart.addListener("rollOverSlice", function(e) {
-	  handleRollOver(e);
-	});
-	
-	function handleInit(){
-	  chart.legend.addListener("rollOverItem", handleRollOver);
-	}
-	
-	function handleRollOver(e){
-	  var wedge = e.dataItem.wedge.node;
-	  wedge.parentNode.appendChild(wedge);
-	}*/
-
-	/* CONFIGURAÇÃO GRÁFICO HIGHTCHARTS */
+	/* CONFIGURAÇÃOO GRÁFICO HIGHTCHARTS */
 	$('#id').highcharts({
 	      chart: {
 	          type: 'areaspline'
@@ -193,7 +138,7 @@ $(function () {
 	        categories: ['xaxis']
 	      },
 	      title: {
-	          text: 'Frêquencias'
+	          text: 'FrÃªquencias'
 	      },
 	      tooltip: {
 	          shared: true,
@@ -205,7 +150,7 @@ $(function () {
 	        }
 	    },
 	    xAxis: {
-	        categories: ['Janeiro','Favereiro','Março','Abril', 'Maio', 'Junho', 'julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+	        categories: ['Janeiro','Favereiro','MarÃ§o','Abril', 'Maio', 'Junho', 'julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 	    },
 	    yAxis: {
 	        title: {
@@ -269,7 +214,7 @@ $(function () {
 		<div class="col-lg-3 col-xs-6">
 			<div class="small-box bg-red">
 				<div class="inner">
-					<h3>R$ 850,00</h3>
+					<h3>R$ <?php echo number_format($total_pendente, 2, ",", "."); ?></h3>
 					<p>Pendentes</p>
 				</div>
 				
@@ -290,7 +235,7 @@ $(function () {
 				
 				<div class="icon">
 					<i class=""></i>
-				</div>
+				</div> 
 				
 				<a href="#" class="small-box-footer"></a>
 			</div>

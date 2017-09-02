@@ -39,13 +39,13 @@
 	}
 	
 	
-	//Lista do banco os tipo de contato. EXEMPLO: indicaÃ§Ã£o, facebook ...
+	//Lista do banco os tipo de contato. EXEMPLO: indicação, facebook ...
 	$tipo_contatos = lista_tipo_contato($conn);
 	
 	switch ($action){
 		case "cadastrar":
 			
-			// VALIDAÃ‡Ã•ES
+			// VALIDAÇÕES
 			//TODO: arrumar essa gambiarra;
 			
 			$celular = str_replace("(", "", $celular);
@@ -57,7 +57,7 @@
 			
 			if(!filter_var($email, FILTER_VALIDATE_EMAIL))
 			{
-				$msg = "[AVISO] E-mail invÃ¡lido, preencha um email correto!";
+				$msg = "[AVISO] E-mail inválido, preencha um email correto!";
 				header("location: clientes.php?msg=$msg&erro=1");
 				die();
 			}
@@ -182,12 +182,41 @@
 			//INSERE ACESSO
 			if($tipo_venda_baixa == 0)
 			{
+				$acesso = listaAcesso($conn, $id_cliente, $id_tipo_acesso);
+				
+				$qtd_acessos = ($acesso['total'] + $qtd_acesso) - $acesso['consumido'];
+
+				if($qtd_acessos < 0)
+				{
+					$qtd_acessos = $qtd_acessos * -1;
+					$valor_total = retornar_preço_total_acesso($conn, $id_tipo_acesso, $qtd_acessos);
+					
+					replace_cliente_pendente($conn, $id_cliente, $id_tipo_acesso, $valor_total);
+				}
+				else
+				{
+					deleta_cliente_pendente($conn, $id_cliente);
+				}
+
 				$tipo_acesso    = lista_tipo_acesso($conn, $id_tipo_acesso);
 				$retorno_insere = insereAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso, $qtd_acesso * $tipo_acesso[0]['valor_tipo_acesso']);
 			}
 			//BAIXA ACESSO
 			else if($tipo_venda_baixa == 1)
 			{
+				$acesso = listaAcesso($conn, $id_cliente, $id_tipo_acesso);
+				
+				//somo o baixa acesso atual + o total que sera inserido, conseguindo saber se havera divergência
+				$qtd_acessos = $acesso['total'] - ($acesso['consumido'] + $qtd_acesso);
+				
+				if($qtd_acessos < 0)
+				{
+					$qtd_acessos = $qtd_acessos * -1;
+					$valor_total = retornar_preço_total_acesso($conn, $id_tipo_acesso, $qtd_acessos);
+
+					replace_cliente_pendente($conn, $id_cliente, $id_tipo_acesso, $valor_total);
+				}
+				
 				$retorno_baixa = baixaAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso);
 			}
 				
@@ -254,7 +283,7 @@
 
 $( function() {
 
-	$('#example1').DataTable({
+	$('#tabela_clientes').DataTable({
       "paging": true,
       "lengthChange": true,
       "searching": false,
@@ -301,17 +330,6 @@ $(document).ready(function(){
     autoclose: true
   });
 
-  $(".btn-popup").click(function(){
-    $(".fundo").show();
-    $(".pop-up").show();
-  });
-
-  $("#fechar-popup").click(function(){
-    $(".fundo").hide();
-    $(".pop-up").hide();
-  });
-
-
 	$(".deletar-cliente").click(function(){
 		var id = $(this).data("id");
 
@@ -327,9 +345,10 @@ $(document).ready(function(){
 	});
 	
 	$(document).on("click", ".fa-list-alt", function(){
-		var id   = $(this).data("cliente"),
-			nome = $(this).data("nome");
-		
+		var id   	 = $(this).data("cliente");
+		var	nome 	 = $(this).data("nome");
+		var produtos = ["Shake", "Sopa", "NutriSoup"];
+
 		$(".id_cliente").attr("value", id);
 		$(".nome_cliente").text(nome);
 		
@@ -337,40 +356,40 @@ $(document).ready(function(){
 		({
 			url: "ajax_lista_acesso.php",
 			data: {id_cliente: id},
+			dataType: 'json',
 			success: function(retorno)
 			{
-				if(retorno.indexOf("@") != "-1")
+				if(retorno[1] !== 0 || retorno[2] !== 0 || retorno[3] !== 0)
 				{
-					var	acessos  = retorno.split("@"),
-						acessoTH = acessos[0].split(','),
-						acessoTD = acessos[1].split(','),
-						valores, 
-						valor, 
-						consumo, 
-						total, 
-						corFundo;
-
-					for(var i = 0; i < acessoTH.length; i++)
+					var count = Object.keys(retorno).length;
+					for(i = 1; i <= count; i++)
 					{
-						valor    	= acessoTD[i].split("/");
-						consumo  	= parseInt(valor[0]);
-						total    	= parseInt(valor[1]);
-
+						if(retorno[i] === 0)
+							continue;
+						
+						var valores = retorno[i].split("-");
+						
+						consumo  	= parseInt(valores[0]);
+						total    	= parseInt(valores[1]);
+	
+						//Não exibo se nao houver consumido e nem comprado o acesso;
+						if(consumo == 0 && total == 0)
+							continue;
+						
 						if(consumo > total)
 							corFundo = "rgba(255, 0, 0, 0.50)";
 						else
 							corFundo = "#eaeaea";
-
-						$("<tr id=" + (i+1) + " style='background: " + corFundo + ";'>" +
+	
+						$("<tr id=" + (i) + " style='background: " + corFundo + ";'>" +
 								"<th width='5%'>"
-									+ acessoTH[i] + 
+									+ produtos[i-1] + 
 						  		"</th>" +
-
+	
 						  		"<td>"
-									+ acessoTD[i] + 
+									+ consumo + "/" + total + 
 					  			"</td>" +
 						  "</tr>").appendTo(".pop-up-tabela");
-					
 					}
 				}
 				else
@@ -400,42 +419,16 @@ $(document).ready(function(){
 
 		parent.css("display", "none");
 	});
+
+	$(".bota_add_acesso").click(function(){
+		var qtd_botao = $(this).val();
+		var qtd_input = parseInt($(".input-qtd-acesso").val()) || 0;
+
+		var total = parseInt(qtd_botao) + parseInt(qtd_input);
+		//SETO OS VALORES NO INPUT DOS ACESSO
+		$(".input-qtd-acesso").val(total);
+	});
 });
-
-/*function verifica()
-{
-	var elementos = document.getElementsByClassName('verifica');
-	var retorno = true;
-
-	for(var i = 0; i < elementos.length; i++)
-	{
-		if(elementos[i].type == "radio" || elementos[i].type == "checkbox")
-		{
-			
-			var marcador =ntos[i].length;
-			alert(marcador);	
-		}
-		corFundo(elementos[i], "#FFFFFF", "#FF7676");
-	}
-	return false;
-	
-}
-
-function corFundo(elementos, padrao, erro)
-{
-	if(elementos.value == "")
-	{
-		elementos.style.background = erro;
-
-		retorno = false;
-	}
-	else
-	{
-		elementos.style.background = padrao;
-
-		retorno = true;
-	}
-}*/
 </script>
 
 <!-- Content Header (Page header) -->
@@ -449,13 +442,12 @@ function corFundo(elementos, padrao, erro)
 
 <!-- Main content -->
 <section class="content">
-
 	<?php 	
 		if(!empty($msg))
 		{
 			$nomeClasse = ($erro == 0) ? "success" : "danger";
 				
-			echo "<div class='callout callout-$nomeClasse' style='margin:8px 15px 0 15px;position: relative;'>";
+			echo "<div class='callout callout-$nomeClasse' style='position: relative;'>";
  			echo 	"<h4 style='font-weight: normal;'>$msg</h4>";
  			echo 	"<span class='fecha-msg'>X</span>";
 			echo "</div>";
@@ -472,7 +464,7 @@ function corFundo(elementos, padrao, erro)
 	        <h4 class="modal-title" id="myModalLabel">Alerta!</h4>
 	      </div>
 	      <div class="modal-body">
-	        VocÃª realmente deseja deletar o cliente?
+	        Você realmente deseja deletar o cliente?
 	      </div>
 	      <div class="modal-footer">
 	        <button type="button" class="btn btn-danger" data-dismiss="modal">Fechar</button>
@@ -483,13 +475,11 @@ function corFundo(elementos, padrao, erro)
 	  </div>
 	</div>
 	
-<!-- Main content -->
-<section class="content">
   	<!-- Modal ACESSOS -->
 	<div class="modal fade in" id="cadastro-acesso" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
 	  <div class="modal-dialog" role="document" style="width: 380px;">
 	    <div class="modal-content">
-	     <form action="clientes.php" method="post" onsubmit="javascript:return verifica();">
+	     <form action="clientes.php" method="post">
 	     <input type="hidden" name="id_cliente" class="id_cliente" />
 	      <div class="modal-header">
 	        <button type="button" class="close btn_close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -499,24 +489,20 @@ function corFundo(elementos, padrao, erro)
 	      <div class="modal-body">
 	      	<div class="box-body">
       			<div class="row">
-	                <div class="form-group col-xs-12">
-	                	<label>
-		                  Acesso
-		                </label>
-	                	
-	                	<div>
-		                  	<input type="radio" name="tipo_venda_baixa" value="0" class="minimal verifica" style="width:20px;height:20px;">
-			                Compra
-		                  	
-		                  	<input type="radio" name="tipo_venda_baixa" value="1" class="minimal verifica" style="width:20px;height:20px;margin-left: 20px;">
-	                  		Consumo
-	                	</div>
-	                	
-              		</div>
-	
+      				<div class="form-group col-xs-12">
+                  		<!-- <label>Quantidade:</label> -->
+                  		<input class="form-control verifica input-qtd-acesso" type="text" name="qtd_acesso" value="0"
+                  			style="border: none;font-size: 45px;padding: 5px 0;margin-bottom: 30px;" />
+                  			
+                  		<button type="button" class="col-lg-4 col-xs-4 col-sm-4 bota_add_acesso" value="1">+1</button>
+                  		<button type="button" class="col-lg-4 col-xs-4 col-sm-4 bota_add_acesso" value="3">+3</button>
+                  		<button type="button" class="col-lg-4 col-xs-4 col-sm-4 bota_add_acesso" value="5">+5</button>
+                  	</div>
+                  	
 	                <div class="form-group col-xs-12">
 	                  <label>Tipo de acesso:</label>
 	                  <select class="tipo_acesso form-control select2 verifica" name="id_tipo_acesso" style="width: 100%;">
+	                  	<option></option>
 						<?php 
 							if(is_array($tipos_acesso) && count($tipos_acesso) > 0)
 							{
@@ -534,11 +520,20 @@ function corFundo(elementos, padrao, erro)
 	              	</select>
 	                </div>
 	                
-                  	<div class="form-group col-xs-12">
-                  		<label>Quantidade:</label>
-                  		<input class="form-control verifica" type="number" name="qtd_acesso" class="form-control">
-                  	</div>
-	                
+	                <div class="form-group col-xs-12">
+	                	<label>
+		                  Acesso
+		                </label>
+	                	
+	                	<div>
+		                  	<input type="radio" name="tipo_venda_baixa" value="0" class="minimal verifica" style="width:20px;height:20px;">
+			                Compra
+		                  	
+		                  	<input type="radio" name="tipo_venda_baixa" value="1" class="minimal verifica" style="width:20px;height:20px;margin-left: 20px;">
+	                  		Consumo
+	                	</div>
+              		</div>
+              		
 	                <div class="form-group col-xs-12" style="margin: 15px 0 0 0;">
 	                  	<b>Cliente: <span class="nome_cliente">Caique Fialho</span></b>
 	                </div>
@@ -566,7 +561,7 @@ function corFundo(elementos, padrao, erro)
 	  </div>
 	</div>
 	
-	<!-- Modal PADRÃƒO -->
+	<!-- Modal PADRÃO -->
 	<div class="modal fade in" id="cadastro-cliente" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
 	  <div class="modal-dialog" role="document">
 	    <div class="modal-content">
@@ -656,7 +651,7 @@ function corFundo(elementos, padrao, erro)
         	<input type="hidden" name="id_cliente" value="<?php echo $id_cliente; ?>" />
 	        <div class="box-body">
 	          <!-- Date dd/mm/yyyy -->
-	          <div class="form-group col-xs-3">
+	          <div class="form-group col-md-4 col-sm-6 col-xs-12">
 	            <label>Nome:</label>
 	            <div class="input-group" style="width: 100%;">
 	              <input type="text" name="nome" class="form-control" id="tags">
@@ -666,10 +661,10 @@ function corFundo(elementos, padrao, erro)
 	          <!-- /.form group -->
 	
 	          <!-- phone mask -->
-	          <div class="form-group col-xs-3">
+	          <div class="form-group col-md-4 col-sm-6 col-xs-12">
 	            <label>Celular:</label>
 	
-	            <div class="input-group">
+	            <div class="input-group" style="width: 100%;">
 	              <input type="text" name="celular" class="form-control"  data-inputmask='"mask": "(99) 99999-9999"' data-mask>
 	            </div>
 	            
@@ -702,13 +697,13 @@ function corFundo(elementos, padrao, erro)
         </div>
         <!-- /.box-header -->
         <div class="box-body">
-          <table id="example1" class="table table-bordered table-hover">
+          <table id="tabela_clientes" class="table table-bordered table-hover">
             <thead>
             
               <tr>
                 <th>Nome</th>
-                <th style="text-align:center;">Celular</th>
-                <th style="text-align:center;">FrequÃªncias</th>
+                <th style="text-align:center;" class="esconde_coluna">Celular</th>
+                <th style="text-align:center;">Frequências</th>
                 <th style="text-align:center;">Acessos</th>
                 <th style="text-align:center;">Editar</th>
                 <th style="text-align:center;">Excluir</th>
@@ -720,9 +715,6 @@ function corFundo(elementos, padrao, erro)
             <?php
 			if(is_array($clientes) && count($clientes) > 0)
 			{
-				/*$resutlado = encrypt($teste);
-				
-				var_dump(descryt($resutlado));*/
 				foreach ($clientes as $cliente)
 				{
 					$data_nascimento = date("d/m/Y", strtotime($cliente['DATA_ANIVERSARIO']));
@@ -732,7 +724,7 @@ function corFundo(elementos, padrao, erro)
 				?>
               <tr>
                 <td><?php echo $cliente['NOME']; ?></td>
-                <td align="center"><?php echo $cliente['CELULAR']; ?></td>
+                <td align="center" class="esconde_coluna"><?php echo $cliente['CELULAR']; ?></td>
                 <td align="center">
                 	<i class="fa fa-calendar" aria-hidden="true"></i>
                 </td>
@@ -782,4 +774,3 @@ function corFundo(elementos, padrao, erro)
 
 <?php
   require_once("footer.php");
-?>
