@@ -1,34 +1,36 @@
-<?php 
+<?php
 
-  if(!isset($_SESSION))
-    session_start();
+	header("Content-Type: text/html; charset=ISO-8859-1");
+
+	if(!isset($_SESSION))
+	  session_start();
   
-  //Se nao houve sessÃ£o quando logar, voltara para a tela de login;
-  if(!isset($_SESSION['id']))
-  {
-    header("location: login.php");
-    die();
-  }
-
-  /* Carrega buffer com os dados de saida */
-  ob_start();
-
-  require_once("access.php");
-  require_once("function/conexao.php");
-  require_once('function/mysqli_fetch_all_mod.php');
-  
-  if(isset($_REQUEST['msg']))
-    $msg = $_REQUEST['msg'];
+	//Se nao houve sessÃ£o quando logar, voltara para a tela de login;
+	if(!isset($_SESSION['id']))
+	{
+		header("location: login.php");
+		die();
+	}
+	  
+	  
+	/* Carrega buffer com os dados de saida */
+	ob_start();
+	
+	require_once("access.php");
+	require_once("function/conexao.php");
+	require_once('function/mysqli_fetch_all_mod.php');
+	  
+	if(isset($_REQUEST['msg']))
+	  $msg = $_REQUEST['msg'];
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
-  	<meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<title>Real Shake</title>
  
-	<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+	<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport" HTTP-EQUIV="Content-Type" CONTENT="charset=ISO-8859-1">
+	<link rel="icon" href="img/logo/logo.png" type="image/gif" sizes="16x16">
 	<!-- Meu CSS  -->
 	<link rel="stylesheet" href="css/style.css">
 	<!-- Bootstrap 3.3.6 -->
@@ -90,7 +92,7 @@
 	<script src="plugins/input-mask/jquery.inputmask.extensions.js"></script>
 </head>
 
-<body class="hold-transition skin-red sidebar-mini">
+<body class="hold-transition skin-red sidebar-mini <?php echo isset($_COOKIE['max-min-menu']) ? $_COOKIE['max-min-menu'] : ""?>">
 <div class="wrapper">
   <!-- Main Header -->
   <header class="main-header">
@@ -114,23 +116,11 @@
 
       <!-- Sidebar Menu -->
       <ul class="sidebar-menu">
-        <li class="header">Menu de NavegaÃ§Ã£o</li>
+        <li class="header">Menu de Navegação</li>
         
     	<li id="1" class="treeview">
-          <a href="index.php"><i class="fa fa-area-chart"></i> <span>Dashboard</span>
-           <!--
-           <span class="pull-right-container">
-              <i class="fa fa-angle-left pull-right"></i>
-            </span>
-            -->
-          </a>
-          <!--
-          <ul class="treeview-menu">
-            <li><a href="#">Movimento de Clientes</a></li>
-            <li><a href="#">Origem de Clientes</a></li>
-      		<li><a href="#">Tipo de Acesso</a></li>
-          </ul>
-          -->
+          <a href="index.php"><i class="fa fa-area-chart"></i> <span>Dashboard</span></a>
+           
         </li>
     
     	<li id="2" class="treeview">
@@ -141,17 +131,24 @@
           </a>
           <ul class="treeview-menu">
             <li id="2-1"><a href="clientes.php">Clientes</a></li>
-            <li id="2-2"><a href="acesso_rapido.php">Acesso rÃ¡pido</a></li>
-            <li id="2-3"><a href="clientes_historico.php">HistÃ³rico de Compra</a></li>
+            <li id="2-2"><a href="acesso_rapido.php">Acesso rápido</a></li>
+            <li id="2-3"><a href="clientes_historico.php">Histórico de Compra</a></li>
           </ul>
         </li>
     	
-    	<li id="2" class="treeview">
+    	<li id="3" class="treeview">
           <a href="#"><i class="fa fa-shopping-bag"></i><span>Produtos</span></a>
         </li>
         
-        <li id="2" class="treeview">
-          <a href="#"><i class="fa fa-cog"></i><span>ConfiguraÃ§Ãµes</span></a>
+        <li id="3" class="treeview">
+          <a href="#"><i class="fa fa-cog"></i><span>Configurações</span>
+          	<span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+          </a>
+          <ul class="treeview-menu">
+            <li id="3-1"><a href="usuario.php">Criar Usuário</a></li>
+          </ul>
         </li>
         
       	<li class="treeview">

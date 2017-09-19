@@ -18,15 +18,13 @@ $tipo_contatos = lista_tipo_contato($conn);
 
 switch ($action){
 	case 'filtrar':
-		
 		//Formatando as datas pra busca no banco de dados;
 		$periodo = explode(" - ", $periodo_historico);
+		$data_inicial 	= date("Y-m-d", strtotime(str_replace("/", "-", $periodo[0]))) . " 00:00:00";
+		$data_final	 	= date("Y-m-d", strtotime(str_replace("/", "-", $periodo[1]))) . " 23:59:59";
 
-		$data_inicial 	= date("Y-m-d", strtotime($periodo[0])) . " 00:00:00";
-		$data_Final	 	= date("Y-m-d", strtotime($periodo[1])) . " 23:59:59";
-		
-		$historico_venda = listarHistoricoCliente($conn, false, $nome, $data_inicial, $data_Final);
-		$total 		 	 = totalQtdVendaAcesso($conn, $nome, $data_inicial, $data_Final);
+		$historico_venda = listarHistoricoCliente($conn, false, $nome, $data_inicial, $data_final);
+		$total 		 	 = totalQtdVendaAcesso($conn, $nome, $data_inicial, $data_final);
 
 		break;
 
@@ -88,7 +86,13 @@ $(document).ready(function(){
   $('#datepicker').datepicker({
     autoclose: true
   });
-	
+
+ var d = new Date();
+
+  var mes_atual = d.getMonth()+1;
+  var dia_atual = d.getDate(); 
+
+  $('#reservationtime').daterangepicker('setDate', '');
   //Date range picker
   $('#reservation').daterangepicker();
   //Date range picker with time picker
@@ -97,6 +101,7 @@ $(document).ready(function(){
 	  "autoApply": true,
 	  "opens": "right",
 	  "locale": {
+		  		"format": 'DD/MM/YYYY',
 		        "applyLabel": "Aplicar",
 		        "cancelLabel": "Fechar",
 		        "daysOfWeek":[
@@ -122,7 +127,9 @@ $(document).ready(function(){
 	  	             "Novembro",
 	  	             "Dezembro"
   	           ]
-  	  }
+  	  },
+	  startDate: '01/' + mes_atual + '/2017',
+	  endDate: dia_atual + '/' + mes_atual + '/2017'
   });
 
 });
@@ -131,138 +138,133 @@ $(document).ready(function(){
 <!-- Content Header (Page header) -->
 <section class="content-header">
   <h1>
-    HistÃ³rico de Compras
+    Histórico de Compras
     <small>Compra de acessos</small>
   </h1>
 </section>
 
 <!-- Main content -->
 <section class="content">
-	<section class="content">
-	  <div class="row">
-	    <div class="col-xs-12">
-	        <div class="box box-danger">
-	        <div class="box-header with-border">
-	           <h3 class="box-title">Busca</h3>
-	        </div>
-	        
-	        <form action="clientes_historico.php" method="post">
-		        <div class="box-body">
-		          <!-- Date dd/mm/yyyy -->
-		          <div class="form-group col-xs-3">
-		            <label>Nome:</label>
-		            <div class="input-group" style="width: 100%;">
-		              <input type="text" name="nome" class="form-control" id="tags">
-		            </div>
-		            <!-- /.input group -->
-		          </div>
-		
-		          <div class="form-group col-xs-3">
-		              <div class="form-group">
-		                <label>PerÃ­odo:</label>
-		
-		                <div class="input-group">
-		                  <div class="input-group-addon">
-		                    <i class="fa fa-calendar"></i>
-		                  </div>
-		                  <input type="text" name="periodo_historico" class="form-control pull-right" id="reservationtime">
-		                </div>
-		                <!-- /.input group -->
-		              </div>
-		            
-		          </div><!-- /.form-group-->
-	
-		        </div><!-- /.box-body -->
-		
-		        <div class="box-footer">
-		            <button type="submit" name="acao" class="btn btn-primary pull-right btn-Maxwidth" value="filtrar">
-		              <i class="fa fa-search"></i>
-		              Buscar
-		            </button>
-		        </div>
-	        	
-	        </form>
-	      </div>
-	    </div>
-	  </div>
-	  <!-- /.row -->
-	   <div class="row">
-	    <div class="col-xs-12">
-	      <div class="box">
-	        <div class="box-header with-border">
-	          <h3 class="box-title">HistÃ³rico</h3>
-	        </div>
-	        
+  <div class="row">
+    <div class="col-xs-12">
+        <div class="box box-danger">
+        <div class="box-header with-border">
+           <h3 class="box-title">Busca</h3>
+        </div>
+        
+        <form action="clientes_historico.php" method="post">
 	        <div class="box-body">
-	          <table id="example1" class="table table-bordered table-hover">
-	            <thead>
-	            
-	              <tr>
-	                <th>Nome</th>
-	                <th style="text-align:center;">Data</th>
-	                <th style="text-align:center;">Tipo de Acesso</th>
-	                <th style="text-align:center;">Quantidade</th>
-	                <th style="text-align:center;">Valor</th>
-	              </tr>
-	            
-	            </thead>
-	            
-	            <tbody>
-			            <?php
-						if(is_array($historico_venda) && count($historico_venda) > 0)
-						{
-							/*$resutlado = encrypt($teste);
-							
-							var_dump(descryt($resutlado));*/
-							foreach ($historico_venda as $historico)
-							{
-								$data_venda  = date("d/m/Y - h:m:s", strtotime($historico['data_venda']));
-								$valor_venda = "R$ " . number_format($historico['valor_venda_acesso'], 2, ',', '.'); 
-							?>
-			              <tr>
-			                <td><?php echo $historico['nome_cliente']; ?></td>
-			                <td align="center"><?php echo $data_venda; ?></td>
-			                <td align="center"><?php echo $historico['nome_acesso']; ?></td>
-			                <td align="center"><?php echo $historico['qtde_acesso']; ?></td>
-			                <td align="right"><?php echo $valor_venda; ?></td>
-			              </tr>
-			            <?php 
-							}
-						}
-						else
-						{
-						
-			            ?>
-			            <tr>
-			            	<td colspan="6" align="center" style="color: #FF0000;font-weight: bold;">Nenhum histÃ³rico encontrado.</td>
-			            </tr>
-			            
-			            <?php 
-						}
-			            ?>
-	            </tbody>
-	            <tbody style="border-top: none;">
-		            <tr>
-		            	<th colspan="4" style="text-align:right;">Total</th>
-		            	<th colspan="4" style="text-align:right;color: #2cb03c;">
-		            	  	<i class="fa fa-usd"></i>
-		            		<?php echo $total_venda; ?>
-		            	</th>
-		            </tr>
-	            </tbody>
-	          </table>
-	        </div>
+	          <!-- Date dd/mm/yyyy -->
+	          <div class="form-group col-lg-4 col-xs-12 col-sm-6">
+	            <label>Nome:</label>
+	            <div class="input-group" style="width: 100%;">
+	              <input type="text" name="nome" class="form-control" id="tags">
+	            </div>
+	            <!-- /.input group -->
+	          </div>
 	
-	         <div class="box-footer">
+	          <div class="form-group col-lg-4 col-xs-12 col-sm-6">
+	              <div class="form-group">
+	                <label>Período:</label>
+	
+	                <div class="input-group">
+	                  <div class="input-group-addon">
+	                    <i class="fa fa-calendar"></i>
+	                  </div>
+	                  <input type="text" name="periodo_historico" class="form-control pull-right" id="reservationtime" >
+	                </div>
+	                <!-- /.input group -->
+	              </div>
 	            
+	          </div><!-- /.form-group-->
+
+	        </div><!-- /.box-body -->
+	
+	        <div class="box-footer">
+	            <button type="submit" name="acao" class="btn btn-primary pull-right btn-Maxwidth" value="filtrar">
+	              <i class="fa fa-search"></i>
+	              Buscar
+	            </button>
 	        </div>
-	        <!-- /.box-body -->
-	      </div>
-	      <!-- /.box -->
-	    </div>
-	    <!-- /.col -->
-	  </div>
-	</section>
+        	
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- /.row -->
+   <div class="row">
+    <div class="col-xs-12">
+      <div class="box">
+        <div class="box-header with-border">
+          <h3 class="box-title">Histórico</h3>
+        </div>
+        
+        <div class="box-body">
+          <table id="example1" class="table table-bordered table-hover">
+            <thead>
+            
+              <tr>
+                <th>Nome</th>
+                <th style="text-align:center;">Data</th>
+                <th style="text-align:center;">Tipo de Acesso</th>
+                <th style="text-align:center;">Quantidade</th>
+                <th style="text-align:center;">Valor</th>
+              </tr>
+            
+            </thead>
+            
+            <tbody>
+		            <?php
+					if(is_array($historico_venda) && count($historico_venda) > 0)
+					{
+						foreach ($historico_venda as $historico)
+						{
+							$data_venda  = date("d/m/Y - h:m:s", strtotime($historico['data_venda']));
+							$valor_venda = "R$ " . number_format($historico['valor_venda_acesso'], 2, ',', '.'); 
+						?>
+		              <tr>
+		                <td><?php echo $historico['nome_cliente']; ?></td>
+		                <td align="center"><?php echo $data_venda; ?></td>
+		                <td align="center"><?php echo $historico['nome_acesso']; ?></td>
+		                <td align="center"><?php echo $historico['qtde_acesso']; ?></td>
+		                <td align="right"><?php echo $valor_venda; ?></td>
+		              </tr>
+		            <?php 
+						}
+					}
+					else
+					{
+					
+		            ?>
+		            <tr>
+		            	<td colspan="6" align="center" style="color: #FF0000;font-weight: bold;">Nenhum histórico encontrado.</td>
+		            </tr>
+		            
+		            <?php 
+					}
+		            ?>
+            </tbody>
+            <tbody style="border-top: none;">
+	            <tr>
+	            	<th colspan="4" style="text-align:right;">Total</th>
+	            	<th colspan="4" style="text-align:right;color: #2cb03c;">
+	            	  	<i class="fa fa-usd"></i>
+	            		<?php echo $total_venda; ?>
+	            	</th>
+	            </tr>
+            </tbody>
+          </table>
+        </div>
+
+         <div class="box-footer">
+            
+        </div>
+        <!-- /.box-body -->
+      </div>
+      <!-- /.box -->
+    </div>
+    <!-- /.col -->
+  </div>
 </section>
 <?php
   require_once("footer.php");

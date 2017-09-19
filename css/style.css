@@ -175,3 +175,22 @@ input[type=checkbox]
     padding: 6px;
     color: #828282
 }
+
+/* STYLE FOR MOBILE */
+
+@media only screen and (max-width: 430px) {
+    .esconde_coluna {
+        display: none;
+    }
+    
+    .text-small-content-header
+    {
+    	display: flex!important;
+    	flex-wrap: wrap;
+    }
+    
+    .modal-dispositivo
+    {
+   	    width: calc(100% - 20px)!important;
+    }
+}

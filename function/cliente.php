@@ -443,7 +443,7 @@ function deleta_cliente_pendente($conn, $id_cliente)
 		return false;
 }
 
-function retornar_preço_total_acesso($conn, $id_tipo_acesso, $total)
+function retornar_preco_total_acesso($conn, $id_tipo_acesso, $total)
 {
 	$query  = sprintf("SELECT valor_tipo_acesso * %d as total_valor FROM tipo_acesso WHERE id_tipo_acesso = %d", 
 			
@@ -462,9 +462,37 @@ function retornar_preço_total_acesso($conn, $id_tipo_acesso, $total)
 	}
 }
 
+function retornar_valor_taxa($tipo_pagamento, $qtd_acesso)
+{
+	switch ($tipo_pagamento)
+	{
+		case 2:return $qtd_acesso * 0.70;//CARTAO DE CREDITO
+		
+		case 3:return $qtd_acesso * 0.90;//CARTAO DE CREDITO
+		
+		default: return 0;//CARTAO DE DEBITO OU DINHEIRO
+	}
+}
+
 function total_pendente($conn)
 {
 	$query  = "SELECT SUM(valor_total) AS total FROM cliente_pendente";
+	
+	$resultado = mysqli_query($conn, $query);
+	if($resultado !== false)
+	{
+		$array = mysqli_fetch_all_mod($resultado);
+		return $array[0]['total'];
+	}
+	else
+	{
+		return false;
+	}
+}
+
+function listar_pendente_cliente($conn, $id_cliente)
+{
+	$query  = "SELECT valor_total AS total FROM cliente_pendente WHERE id_cliente = " . mysqli_real_escape_string($conn, $id_cliente);
 	
 	$resultado = mysqli_query($conn, $query);
 	if($resultado !== false)

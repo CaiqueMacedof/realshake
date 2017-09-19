@@ -282,8 +282,8 @@
 
 <section class="content-header">
   <h1>
-    Acesso Rápido
-    <small>Frequências semanais do dia <span style="color: #4a4a4a;font-weight:bold;"><?php echo "$dias_semana[$dia_inicio] ($inicioSemana) à $dias_semana[$dia_final] ($atualSemana)"?></span></small>
+    Acesso R�pido
+    <small class="text-small-content-header">Frequ�ncias semanais do dia <span style="color: #4a4a4a;font-weight:bold;"><?php echo "$dias_semana[$dia_inicio] ($inicioSemana) � $dias_semana[$dia_final] ($atualSemana)"?></span></small>
   </h1>
 </section>
 
@@ -318,7 +318,7 @@
 						else
 							$texto = $topFrequencia['total_frequencia'] . " Frequências";
 						
-						echo "	<div class='col-lg-3 col-xs-6'>
+						echo "	<div class='col-lg-4 col-xs-12 col-sm-6'>
 									<div data-toggle='modal' data-target='#acesso_rapido' class='small-box bg-aqua' data-cliente='$topFrequencia[ID_CLIENTE]' style='background: $cor!important'>
 										<div class='inner' style='max-width: 70%;'>
 											<h4>$topFrequencia[nome]</h4>
@@ -341,7 +341,7 @@
 						//Busca os avatares masculinos, senão busca os feminino
 						$imagem = buscarAvatar($nãoFrequencia['sexo']);
 							
-						echo "	<div class='col-lg-3 col-xs-6'>
+						echo "	<div class='col-lg-4 col-xs-12 col-sm-6'>
 								<div data-toggle='modal' class='small-box bg-aqua' data-cliente='$nãoFrequencia[id_cliente]' style='background: #d4d4d4!important;cursor: auto;'>
 								<div class='inner' style='max-width: 70%;'>
 								<h4>$nãoFrequencia[nome]</h4>

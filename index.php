@@ -106,7 +106,7 @@ $(function () {
             type: 'pie'
         },
         title: {
-            text: 'Estat√É¬≠sticas Contato'
+            text: 'EstatÌticas Contato'
         },
         tooltip: {
             pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
@@ -128,7 +128,7 @@ $(function () {
         }]
     });
 
-	/* CONFIGURA√á√ÉOO GR√ÅFICO HIGHTCHARTS */
+	/* CONFIGUR«√O GR¡FICO HIGHTCHARTS */
 	$('#id').highcharts({
 	      chart: {
 	          type: 'areaspline'
@@ -138,7 +138,7 @@ $(function () {
 	        categories: ['xaxis']
 	      },
 	      title: {
-	          text: 'Fr√É¬™quencias'
+	          text: 'FrequÍncias'
 	      },
 	      tooltip: {
 	          shared: true,
@@ -150,7 +150,7 @@ $(function () {
 	        }
 	    },
 	    xAxis: {
-	        categories: ['Janeiro','Favereiro','Mar√É¬ßo','Abril', 'Maio', 'Junho', 'julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+	        categories: ['Janeiro','Favereiro','MarÁo','Abril', 'Maio', 'Junho', 'julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 	    },
 	    yAxis: {
 	        title: {
@@ -169,14 +169,6 @@ $(function () {
 	  });
 });
 </script>
-
-<style>
-	.icon-size
-	{
-		font-size: 60px;
-	}
-</style>
-
 <!-- Content Header (Page header) -->
 <section class="content-header">
   <h1>
@@ -184,10 +176,10 @@ $(function () {
     <small>Painel de Controle</small>
   </h1>
 </section>
-
+      
 <section class="content">
 	<div class="row">
-		<div class="col-lg-3 col-xs-6">
+		<div class="col-lg-3 col-xs-12 col-sm-6">
 			<div class="small-box bg-aqua">
 				<div class="inner">
 					<h3><?php echo $total_clientes[0]['total_cliente']; ?></h3>
@@ -202,7 +194,7 @@ $(function () {
 			</div>
 		</div>
 		
-		<div class="col-lg-3 col-xs-6">
+		<div class="col-lg-3 col-xs-12 col-sm-6">
 			<div class="small-box bg-yellow">
 				<div class="inner">
 					<h3><?php echo $total_acesso[0]['total_acessos']; ?></h3>
@@ -210,14 +202,14 @@ $(function () {
 				</div>
 				
 				<div class="icon">
-					<i class="fa fa-list-alt icon-size"></i>
+					<i class=""></i>
 				</div>
 				
 				<a href="#" class="small-box-footer"></a>
 			</div>
 		</div>
 		
-		<div class="col-lg-3 col-xs-6">
+		<div class="col-lg-3 col-xs-12 col-sm-6">
 			<div class="small-box bg-red">
 				<div class="inner">
 					<h3>R$ <?php echo number_format($total_pendente, 2, ",", "."); ?></h3>
@@ -225,14 +217,14 @@ $(function () {
 				</div>
 				
 				<div class="icon">
-					<i class="fa fa-thumbs-o-down icon-size"></i>
+					<i class=""></i>
 				</div>
 				
 				<a href="#" class="small-box-footer"></a>
 			</div>
 		</div>
 		
-		<div class="col-lg-3 col-xs-6">
+		<div class="col-lg-3 col-xs-12 col-sm-6">
 			<div class="small-box bg-green">
 				<div class="inner">
 					<h3>R$ <?php echo $total_venda; ?></h3>
@@ -240,7 +232,7 @@ $(function () {
 				</div>
 				
 				<div class="icon">
-					<i class="fa fa-dollar icon-size"></i>
+					<i class=""></i>
 				</div> 
 				
 				<a href="#" class="small-box-footer"></a>

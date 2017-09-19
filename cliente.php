@@ -137,6 +137,7 @@
 	}
 	
 </style>
+
 <script>
 $(document).ready(function(){
   //Money Euro
@@ -181,7 +182,7 @@ $(document).ready(function(){
 			echo "</div>";
 		}	
 	?>
-	<section class="content">
+ 
   <div class="row">
     <div class="col-xs-12">
         <div class="box box-danger">
@@ -192,22 +193,22 @@ $(document).ready(function(){
         <form action="cliente.php" method="post">
         	<input type="hidden" name="id_cliente" value="<?php echo $id_cliente; ?>">
 	        <div class="box-body">
-	          	<div class="form-group col-xs-6">
+	          	<div class="form-group col-lg-6 col-xs-12 col-sm-12">
                   <label>Nome:</label>
                   <input class="form-control" type="text" name="nome" value="<?php echo $nome; ?>" class="form-control">
                 </div>
 
-                <div class="form-group col-xs-6">
+                <div class="form-group col-lg-6 ccol-xs-12 col-sm-12">
                   <label>E-mail:</label>
                   <input class="form-control" type="text" name="email" value="<?php echo $email; ?>" class="form-control">
                 </div>
                 
-                <div class="form-group col-xs-6">
+                <div class="form-group col-lg-6 col-xs-12 col-sm-12">
                   <label>Celular:</label>
                   <input class="form-control" type="text" name="celular" value="<?php echo $celular; ?>" class="form-control" data-inputmask="'mask': '(99) 99999-9999'" data-mask>
                 </div>
                 
-                <div class="form-group col-xs-6">
+                <div class="form-group col-lg-6 col-xs-12 col-sm-12">
                   <label>Sexo:</label>
 	                  <select class="form-control select2" name="sexo" style="width: 100%;">
 		                  <option selected="selected" disabled>Selecione o sexo</option>
@@ -226,7 +227,7 @@ $(document).ready(function(){
               		  </select>
                 </div>
                 
-                <div class="form-group col-xs-6">
+                <div class="form-group col-lg-6 col-xs-12 col-sm-12">
                   <label>Origem:</label>
                   <select class="form-control select2" name="origem" style="width: 100%;">
                   <option selected="selected" disabled>Selecione uma origem</option>
@@ -251,7 +252,7 @@ $(document).ready(function(){
               	</select>
                 </div>
               
-                <div class="form-group col-xs-6">
+                <div class="form-group col-lg-6 col-xs-12 col-sm-12">
                   <label>Data de Nascimento:</label>
                   <input class="form-control" type="text" name="data_nasc" value="<?php echo $data_nasc;?>"
                   		class="form-control" id="datepicker" data-mask>

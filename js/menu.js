@@ -1,4 +1,14 @@
 $(document).ready(function(){
+	$(".sidebar-toggle").click(function()
+	{
+		//EXPANDIR MENU
+		if($(".sidebar-collapse").length)
+			setCookie("max-min-menu", "");
+		//DIMINUIR MENU
+		else
+			setCookie("max-min-menu", "sidebar-collapse");
+	});
+	
 	var id_aba = getCookie("aba-ativa");
 
 	//Deixa ativo a aba apos o caregamento da página

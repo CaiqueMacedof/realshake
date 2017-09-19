@@ -12,8 +12,8 @@ function insertUsuario($conn, $login, $senha)
 	
 	$retorno = mysqli_query($conn, $query);
 	
-	if($retorno == true)
-		return $retorno;
+	if($retorno != false)
+		return true;
 	else 
 		return false;
 }

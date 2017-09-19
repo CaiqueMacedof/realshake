@@ -1,4 +1,4 @@
-<?php	
+<?php
 	require_once('header.php');
 	require_once('function/cliente.php');
 	require_once('function/criptografia.php');
@@ -15,6 +15,7 @@
 		$data_nasc 	  		= isset($_REQUEST['data_nasc']) 		? $_REQUEST['data_nasc'] 		: "";
 		$origem 	  		= isset($_REQUEST['origem']) 			? $_REQUEST['origem'] 	 		: "";
 		$tipo_venda_baixa 	= isset($_REQUEST['tipo_venda_baixa']) 	? $_REQUEST['tipo_venda_baixa'] : 0;
+		$tipo_venda_baixa 	= isset($_REQUEST['tipo_pagamento']) 	? $_REQUEST['tipo_pagamento'] 	: 1;
 		
 	}
 	else
@@ -36,12 +37,13 @@
 		$id_tipo_acesso 	= isset($_REQUEST['id_tipo_acesso']) 	? $_REQUEST['id_tipo_acesso'] 	: "";
 		$qtd_acesso 		= isset($_REQUEST['qtd_acesso']) 		? $_REQUEST['qtd_acesso'] 		: "";
 		$tipo_venda_baixa 	= isset($_REQUEST['tipo_venda_baixa']) 	? $_REQUEST['tipo_venda_baixa'] : null;
+		$tipo_pagamento 	= isset($_REQUEST['tipo_pagamento']) 	? $_REQUEST['tipo_pagamento'] 	: 0;
 	}
 	
 	
 	//Lista do banco os tipo de contato. EXEMPLO: indicação, facebook ...
 	$tipo_contatos = lista_tipo_contato($conn);
-	
+
 	switch ($action){
 		case "cadastrar":
 			
@@ -164,7 +166,7 @@
 		case 'inserir':
 			
 			$id_cliente = isset($_REQUEST['id_cliente']) ? $_REQUEST['id_cliente'] : null;
-	
+			
 			if($tipo_venda_baixa == "" || empty($id_tipo_acesso)|| empty($qtd_acesso))
 			{
 				$msg = "[AVISO] Por favor preencher todos os campos do cadastro!";
@@ -179,42 +181,52 @@
 				die();
 			}
 			
+			if(empty($tipo_pagamento))
+			{
+				$msg = "[AVISO] Selecione uma forma de pagamento.";
+				header("location: clientes.php?msg=$msg&erro=1");
+				die();
+			}
+			
 			//INSERE ACESSO
 			if($tipo_venda_baixa == 0)
 			{
-				$acesso = listaAcesso($conn, $id_cliente, $id_tipo_acesso);
+				$valor_taxa  	= retornar_valor_taxa($tipo_pagamento, $qtd_acesso);
+				$acesso 	 	= listaAcesso($conn, $id_cliente, $id_tipo_acesso);
+				$total_pendente = listar_pendente_cliente($conn, $id_cliente);
 				
 				$qtd_acessos = ($acesso['total'] + $qtd_acesso) - $acesso['consumido'];
-
+				
 				if($qtd_acessos < 0)
 				{
 					$qtd_acessos = $qtd_acessos * -1;
-					$valor_total = retornar_preço_total_acesso($conn, $id_tipo_acesso, $qtd_acessos);
+					$valor_total = retornar_preco_total_acesso($conn, $id_tipo_acesso, $qtd_acessos);
 					
-					replace_cliente_pendente($conn, $id_cliente, $id_tipo_acesso, $valor_total);
+					replace_cliente_pendente($conn, $id_cliente, $id_tipo_acesso, $valor_total + $valor_taxa);
 				}
 				else
-				{
+				{ 
 					deleta_cliente_pendente($conn, $id_cliente);
 				}
 
 				$tipo_acesso    = lista_tipo_acesso($conn, $id_tipo_acesso);
-				$retorno_insere = insereAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso, $qtd_acesso * $tipo_acesso[0]['valor_tipo_acesso']);
+				$retorno_insere = insereAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso, ($qtd_acesso * $tipo_acesso[0]['valor_tipo_acesso'] + $valor_taxa));
 			}
 			//BAIXA ACESSO
 			else if($tipo_venda_baixa == 1)
 			{
+				$valor_taxa  = retornar_valor_taxa($tipo_pagamento, $qtd_acesso);
 				$acesso = listaAcesso($conn, $id_cliente, $id_tipo_acesso);
 				
-				//somo o baixa acesso atual + o total que sera inserido, conseguindo saber se havera divergência
+				//somo o baixa acesso atual + o total que sera inserido, conseguindo saber se havera divergÃªncia
 				$qtd_acessos = $acesso['total'] - ($acesso['consumido'] + $qtd_acesso);
 				
 				if($qtd_acessos < 0)
 				{
 					$qtd_acessos = $qtd_acessos * -1;
-					$valor_total = retornar_preço_total_acesso($conn, $id_tipo_acesso, $qtd_acessos);
+					$valor_total = retornar_preco_total_acesso($conn, $id_tipo_acesso, $qtd_acessos);
 
-					replace_cliente_pendente($conn, $id_cliente, $id_tipo_acesso, $valor_total);
+					replace_cliente_pendente($conn, $id_cliente, $id_tipo_acesso, $valor_total + $valor_taxa);
 				}
 				
 				$retorno_baixa = baixaAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso);
@@ -225,8 +237,8 @@
 			{
 				if(!empty($paginacao))
 					header("location: clientes.php?msg=Acesso inserido com sucesso!&" . $paginacao);
-					else
-						header("location: clientes.php?msg=Acesso inserido com sucesso!");
+				else
+					header("location: clientes.php?msg=Acesso inserido com sucesso!");
 		
 						exit();
 			}
@@ -234,8 +246,8 @@
 			{
 				if(!empty($paginacao))
 					header("location: clientes.php?msg=[AVISO] Baixa no acesso com sucesso!&" . $paginacao);
-					else
-						header("location: clientes.php?msg=Baixa no acesso com sucesso!");
+				else
+					header("location: clientes.php?msg=Baixa no acesso com sucesso!");
 		
 						exit();
 			}
@@ -243,8 +255,8 @@
 			{
 				if(!empty($paginacao))
 					header("location: clientes.php?msg=[AVISO] Erro ao inserir/baixar o acesso!&erro=1&" . $pagi);
-					else
-						header("location: clientes.php?msg=[AVISO]Erro ao inserir/baixar o acesso!&erro=1");
+				else
+					header("location: clientes.php?msg=[AVISO]Erro ao inserir/baixar o acesso!&erro=1");
 							
 						exit();
 			}
@@ -326,10 +338,15 @@ $(document).ready(function(){
   $("[data-mask]").inputmask();
 
   //Date picker
+  //Date picker
   $('#datepicker').datepicker({
-    autoclose: true
+      todayBtn: "linked",
+      language: "it",
+      autoclose: true,
+      todayHighlight: true,
+      format: 'dd/mm/yyyy' 
   });
-	
+
 	$(".deletar-cliente").click(function(){
 		var id = $(this).data("id");
 
@@ -372,7 +389,7 @@ $(document).ready(function(){
 						consumo  	= parseInt(valores[0]);
 						total    	= parseInt(valores[1]);
 	
-						//Não exibo se nao houver consumido e nem comprado o acesso;
+						//NÃO exibo se nao houver consumido e nem comprado o acesso;
 						if(consumo == 0 && total == 0)
 							continue;
 						
@@ -452,15 +469,75 @@ $(document).ready(function(){
 			$(".input_hidden").attr("value", $(this).val());
 		}
 	});
+
+	$(".tipo_acesso, .input-qtd-acesso").change(function(){
+		var tipo 		 = $(".tipo_acesso").val();
+		var preco_acesso = [15,16,17];
+		var qtd_acesso 	 = $(".input-qtd-acesso").val();
+		
+		$(".input-preco-acesso").val("R$ " + number_format(preco_acesso[tipo-1]*qtd_acesso, 2, ",", "."));
+	});
+
+	 $(".btn_add_acesso").click(function(){
+		var tipo 		 = $(".tipo_acesso").val();
+		var preco_acesso = [15,16,17];
+		var qtd_acesso 	 = $(".input-qtd-acesso").val();
+		
+		$(".input-preco-acesso").val("R$ " + number_format(preco_acesso[tipo-1]*qtd_acesso, 2, ",", "."));
+	 })
 });
+
+function number_format( numero, decimal, decimal_separador, milhar_separador ){ 
+	    numero = (numero + '').replace(/[^0-9+\-Ee.]/g, '');
+	    var n = !isFinite(+numero) ? 0 : +numero,
+	        prec = !isFinite(+decimal) ? 0 : Math.abs(decimal),
+	        sep = (typeof milhar_separador === 'undefined') ? ',' : milhar_separador,
+	        dec = (typeof decimal_separador === 'undefined') ? '.' : decimal_separador,
+	        s = '',
+	        toFixedFix = function (n, prec) {
+	            var k = Math.pow(10, prec);
+	            return '' + Math.round(n * k) / k;
+	        };
+	    // Fix para IE: parseFloat(0.55).toFixed(0) = 0;
+	    s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
+	    if (s[0].length > 3) {
+	        s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
+	    }
+	    if ((s[1] || '').length < prec) {
+	        s[1] = s[1] || '';
+	        s[1] += new Array(prec - s[1].length + 1).join('0');
+	    }
+	    return s.join(dec);
+	}
 </script>
 
 <style>
 	.btn_add_acesso, .btn-consumo
 	{
 		padding: 5px;
-		font-weight: bold;
 	}
+	.verifica[readonly]
+	{
+		background: transparent!important;
+	}
+	
+	a,
+	a:hover
+	{
+		color: #333333;
+		cursor: pointer;
+	}
+	
+	i
+	{
+		cursor: pointer;
+	}
+	
+	table tr td .fa
+	{
+		font-size: 18px;
+	}
+	
 </style>
 
 <!-- Content Header (Page header) -->
@@ -487,7 +564,7 @@ $(document).ready(function(){
 	?>
   	<!-- Modal ALERTA -->
 	<div class="modal  modal-danger fade in" id="alerta" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-	  <div class="modal-dialog" role="document">
+	  <div class="modal-dialog modal-dispositivo" role="document">
 	    <div class="modal-content">
 	     <form action="clientes.php" method="post">
 	     <input type="hidden" name="id_cliente" id="deleta_cliente">
@@ -509,7 +586,7 @@ $(document).ready(function(){
 	
   	<!-- Modal ACESSOS -->
 	<div class="modal fade in" id="cadastro-acesso" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-	  <div class="modal-dialog" role="document" style="width: 380px;">
+	  <div class="modal-dialog modal-dispositivo" role="document" style="width: 380px;">
 	    <div class="modal-content">
 	     <form action="clientes.php" method="post">
 	     <input type="hidden" name="id_cliente" class="id_cliente" />
@@ -524,7 +601,10 @@ $(document).ready(function(){
       				<div class="form-group col-xs-12">
                   		<!-- <label>Quantidade:</label> -->
                   		<input class="form-control verifica input-qtd-acesso" type="text" name="qtd_acesso" value="0"
-                  			style="border: none;font-size: 45px;padding: 5px 0;margin-bottom: 30px;" />
+                  			style="border: none;font-size: 45px;padding: 5px 0;" />
+                  		
+                  		<input class="form-control verifica input-preco-acesso" type="text" value="R$ 0,00"
+                  			style="height: auto;border: none;font-size: 45px;padding: 5px 0;margin-bottom: 30px;" readonly="readonly"/>
                   			
                   		<button type="button" class="col-lg-4 col-xs-4 col-sm-4 btn_add_acesso" value="1">+1</button>
                   		<button type="button" class="col-lg-4 col-xs-4 col-sm-4 btn_add_acesso" value="3">+3</button>
@@ -532,7 +612,7 @@ $(document).ready(function(){
                   	</div>
                   	
 	                <div class="form-group col-xs-12">
-	                  <label>Tipo de acesso:</label>
+	                  <label>Tipos de acesso:</label>
 	                  <select class="tipo_acesso form-control select2 verifica" name="id_tipo_acesso" style="width: 100%;">
 	                  	<option></option>
 						<?php 
@@ -553,19 +633,29 @@ $(document).ready(function(){
 	                </div>
 	                
 	                <div class="form-group col-xs-12">
+	                  <label>Formas de Pagamento:</label>
+	                  <select class="tipo_acesso form-control" name="tipo_pagamento" style="width: 100%;">
+	                  	<option></option>
+	                  	<option value="1">Cartão de Débito/Dinheiro</option>
+	                  	<option value="2">Cartão de Crédito</option>
+	                  	<option value="3">Vale Refeição/Alimentação</option>
+	              	</select>
+	                </div>
+	                
+	                <div class="form-group col-xs-12">
 	                	<label>
 		                  Acesso
 		                </label>
 	                	
 	                	<div>
 	                		<input type="hidden" name="tipo_venda_baixa" class="input_hidden">
-	                		<button type="button" value="0" class="col-lg-6 col-xs-6 col-sm-6 btn-consumo text-green"><i class="fa fa-caret-up text-green"></i>&nbsp Consumo</button>
-                  			<button type="button" value="1" class="col-lg-6 col-xs-6 col-sm-6 btn-consumo text-red"><i class="fa fa-caret-down text-red"></i>&nbsp Baixa</button>
+	                		<button type="button" value="0" class="col-lg-6 col-xs-6 col-sm-6 btn-consumo"><i class="fa fa-caret-up"></i>&nbsp Compra</button>
+                  			<button type="button" value="1" class="col-lg-6 col-xs-6 col-sm-6 btn-consumo"><i class="fa fa-caret-down"></i>&nbsp Consumo</button>
 	                	</div>
               		</div>
               		
 	                <div class="form-group col-xs-12" style="margin: 15px 0 0 0;">
-	                  	<b>Cliente: <span class="nome_cliente">Caique Fialho</span></b>
+	                  	<b>Cliente: <span class="nome_cliente"></span></b>
 	                </div>
 	                
 	                <div class="box-body col-xs-12">
@@ -591,7 +681,7 @@ $(document).ready(function(){
 	  </div>
 	</div>
 	
-	<!-- Modal PADRÃO -->
+	<!-- Modal PADRÃƒO -->
 	<div class="modal fade in" id="cadastro-cliente" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
 	  <div class="modal-dialog" role="document">
 	    <div class="modal-content">
@@ -632,7 +722,7 @@ $(document).ready(function(){
                   <label>Origem:</label>
                   <select class="form-control select2" name="origem" style="width: 100%;">
                   <option selected="selected" disabled>Selecione uma origem</option>
-					<?php 
+					<?php
 					if(is_array($tipo_contatos))
 					{
 						foreach($tipo_contatos as $tipo_contato)
@@ -655,7 +745,7 @@ $(document).ready(function(){
                 
                 <div class="form-group col-xs-6">
                   <label>Data de Nascimento:</label>
-                  <input class="form-control" type="text" name="data_nasc" class="form-control" id="datepicker" data-inputmask="'alias': 'mm/dd/yyyy'" data-mask>
+                  <input class="form-control" type="text" name="data_nasc" class="form-control" id="datepicker" data-inputmask="'alias': 'dd/mm/yyyy'" data-mask>
                 </div>
 	          </div>
 	        </div>
@@ -756,20 +846,20 @@ $(document).ready(function(){
                 <td><?php echo $cliente['NOME']; ?></td>
                 <td align="center" class="esconde_coluna"><?php echo $cliente['CELULAR']; ?></td>
                 <td align="center">
-                	<i class="fa fa-calendar style_icon" aria-hidden="true"></i>
+                	<i class="fa fa-calendar" aria-hidden="true"></i>
                 </td>
                 <td align="center">
-                	<i class="fa fa-list-alt style_icon" aria-hidden="true" data-toggle="modal" data-target="#cadastro-acesso"
+                	<i class="fa fa-list-alt" aria-hidden="true" data-toggle="modal" data-target="#cadastro-acesso"
                 		data-nome="<?php echo $cliente['NOME']; ?>" data-cliente="<?php echo $cliente['ID_CLIENTE']; ?>"></i>
                 </td>
                 
                 <td align="center">
                 	<a href="cliente.php?acao=editar&id_cliente=<?php echo $cliente['ID_CLIENTE'];?>">
-                	<i class="fa fa-pencil style_icon" aria-hidden="true"></i>
+                	<i class="fa fa-pencil" aria-hidden="true"></i>
                 </td>
                 
                 <td align="center">
-                	<i class="fa fa-times deletar-cliente style_icon" style="color: red;" aria-hidden="true"  data-toggle="modal" data-target="#alerta" 
+                	<i class="fa fa-times deletar-cliente" style="color: red;" aria-hidden="true"  data-toggle="modal" data-target="#alerta" 
                 		data-id="<?php echo $cliente['ID_CLIENTE']; ?>"></i>
                 </td>
               </tr>
