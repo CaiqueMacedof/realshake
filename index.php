@@ -14,7 +14,7 @@ $venda_acessos = retornar_diff_venda_acesso($conn);
 
 $estatisticas_linhas = frequenciaCliente($conn);
 $valor_periodo 		 = array();
-//Vai de 1 atÃ© 12 dos mÃªses e de acordo com o mÃªs insere os dados;
+//Vai de 1 atÃ© 12 dos mêses e de acordo com o mÃªs insere os dados;
 for($key = 1; $key <= 12; $key++)
 {
 	foreach ($estatisticas_linhas as $estatistica_key => $estatistica)
@@ -106,7 +106,7 @@ $(function () {
             type: 'pie'
         },
         title: {
-            text: 'Estat�ticas Contato'
+            text: 'Estatísticas Contato'
         },
         tooltip: {
             pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
@@ -128,7 +128,7 @@ $(function () {
         }]
     });
 
-	/* CONFIGUR��O GR�FICO HIGHTCHARTS */
+	/* CONFIGUR��O GR�FICO HIGHTCHARTS */
 	$('#id').highcharts({
 	      chart: {
 	          type: 'areaspline'
@@ -138,7 +138,7 @@ $(function () {
 	        categories: ['xaxis']
 	      },
 	      title: {
-	          text: 'Frequ�ncias'
+	          text: 'Frequências'
 	      },
 	      tooltip: {
 	          shared: true,
@@ -150,7 +150,7 @@ $(function () {
 	        }
 	    },
 	    xAxis: {
-	        categories: ['Janeiro','Favereiro','Mar�o','Abril', 'Maio', 'Junho', 'julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+	        categories: ['Janeiro','Favereiro','Março','Abril', 'Maio', 'Junho', 'julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 	    },
 	    yAxis: {
 	        title: {

@@ -41,13 +41,13 @@
 	}
 	
 	
-	//Lista do banco os tipo de contato. EXEMPLO: indicação, facebook ...
+	//Lista do banco os tipo de contato. EXEMPLO: indicaï¿½ï¿½o, facebook ...
 	$tipo_contatos = lista_tipo_contato($conn);
 
 	switch ($action){
 		case "cadastrar":
 			
-			// VALIDAÇÕES
+			// VALIDAï¿½ï¿½ES
 			//TODO: arrumar essa gambiarra;
 			
 			$celular = str_replace("(", "", $celular);
@@ -59,7 +59,7 @@
 			
 			if(!filter_var($email, FILTER_VALIDATE_EMAIL))
 			{
-				$msg = "[AVISO] E-mail inválido, preencha um email correto!";
+				$msg = "[AVISO] E-mail invï¿½lido, preencha um email correto!";
 				header("location: clientes.php?msg=$msg&erro=1");
 				die();
 			}
@@ -389,7 +389,7 @@ $(document).ready(function(){
 						consumo  	= parseInt(valores[0]);
 						total    	= parseInt(valores[1]);
 	
-						//NÃO exibo se nao houver consumido e nem comprado o acesso;
+						//Nï¿½O exibo se nao houver consumido e nem comprado o acesso;
 						if(consumo == 0 && total == 0)
 							continue;
 						
@@ -573,7 +573,7 @@ function number_format( numero, decimal, decimal_separador, milhar_separador ){
 	        <h4 class="modal-title" id="myModalLabel">Alerta!</h4>
 	      </div>
 	      <div class="modal-body">
-	        Você realmente deseja deletar o cliente?
+	        Vocï¿½ realmente deseja deletar o cliente?
 	      </div>
 	      <div class="modal-footer">
 	        <button type="button" class="btn btn-danger" data-dismiss="modal">Fechar</button>
@@ -636,9 +636,9 @@ function number_format( numero, decimal, decimal_separador, milhar_separador ){
 	                  <label>Formas de Pagamento:</label>
 	                  <select class="tipo_acesso form-control" name="tipo_pagamento" style="width: 100%;">
 	                  	<option></option>
-	                  	<option value="1">Cartão de Débito/Dinheiro</option>
-	                  	<option value="2">Cartão de Crédito</option>
-	                  	<option value="3">Vale Refeição/Alimentação</option>
+	                  	<option value="1">CartÃ£o de DÃ©bito/Dinheiro</option>
+	                  	<option value="2">CartÃ£o de CrÃ©dito</option>
+	                  	<option value="3">Vale RefeiÃ§Ã£o/AlimentaÃ§Ã£o</option>
 	              	</select>
 	                </div>
 	                
@@ -823,7 +823,7 @@ function number_format( numero, decimal, decimal_separador, milhar_separador ){
               <tr>
                 <th>Nome</th>
                 <th style="text-align:center;" class="esconde_coluna">Celular</th>
-                <th style="text-align:center;">Frequências</th>
+                <th style="text-align:center;">FrequÃªncias</th>
                 <th style="text-align:center;">Acessos</th>
                 <th style="text-align:center;">Editar</th>
                 <th style="text-align:center;">Excluir</th>

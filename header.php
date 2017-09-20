@@ -1,6 +1,6 @@
 <?php
 
-	header("Content-Type: text/html; charset=ISO-8859-1");
+	//header("Content-Type: text/html; charset=ISO-8859-1");
 
 	if(!isset($_SESSION))
 	  session_start();
@@ -116,7 +116,7 @@
 
       <!-- Sidebar Menu -->
       <ul class="sidebar-menu">
-        <li class="header">Menu de NavegaÁ„o</li>
+        <li class="header">Menu de Navega√ß√£o</li>
         
     	<li id="1" class="treeview">
           <a href="index.php"><i class="fa fa-area-chart"></i> <span>Dashboard</span></a>
@@ -131,8 +131,8 @@
           </a>
           <ul class="treeview-menu">
             <li id="2-1"><a href="clientes.php">Clientes</a></li>
-            <li id="2-2"><a href="acesso_rapido.php">Acesso r·pido</a></li>
-            <li id="2-3"><a href="clientes_historico.php">HistÛrico de Compra</a></li>
+            <li id="2-2"><a href="cliente_acesso_rapido.php">Acesso r√°pido</a></li>
+            <li id="2-3"><a href="clientes_historico.php">Hist√≥rico de Compra</a></li>
           </ul>
         </li>
     	
@@ -141,13 +141,13 @@
         </li>
         
         <li id="3" class="treeview">
-          <a href="#"><i class="fa fa-cog"></i><span>ConfiguraÁıes</span>
+          <a href="#"><i class="fa fa-cog"></i><span>Configura√ß√µes</span>
           	<span class="pull-right-container">
               <i class="fa fa-angle-left pull-right"></i>
             </span>
           </a>
           <ul class="treeview-menu">
-            <li id="3-1"><a href="usuario.php">Criar Usu·rio</a></li>
+            <li id="3-1"><a href="usuario.php">Criar Usu√°rio</a></li>
           </ul>
         </li>
         

@@ -41,7 +41,7 @@
 				if($qtd_acessos < 0)
 				{
 					$qtd_acessos = $qtd_acessos * -1;
-					$valor_total = retornar_preço_total_acesso($conn, $id_tipo_acesso, $qtd_acessos);
+					$valor_total = retornar_preï¿½o_total_acesso($conn, $id_tipo_acesso, $qtd_acessos);
 						
 					replace_cliente_pendente($conn, $id_cliente, $id_tipo_acesso, $valor_total);
 				}
@@ -58,13 +58,13 @@
 			{
 				$acesso = listaAcesso($conn, $id_cliente, $id_tipo_acesso);
 			
-				//somo o baixa acesso atual + o total que sera inserido, conseguindo saber se havera divergência
+				//somo o baixa acesso atual + o total que sera inserido, conseguindo saber se havera divergï¿½ncia
 				$qtd_acessos = $acesso['total'] - ($acesso['consumido'] + $qtd_acesso);
 			
 				if($qtd_acessos < 0)
 				{
 					$qtd_acessos = $qtd_acessos * -1;
-					$valor_total = retornar_preço_total_acesso($conn, $id_tipo_acesso, $qtd_acessos);
+					$valor_total = retornar_preï¿½o_total_acesso($conn, $id_tipo_acesso, $qtd_acessos);
 			
 					replace_cliente_pendente($conn, $id_cliente, $id_tipo_acesso, $valor_total);
 				}
@@ -189,7 +189,7 @@
 	});
 </script>
 
-<!-- Modal inserir Acesso rápido -->
+<!-- Modal inserir Acesso rï¿½pido -->
 	<div class="modal  modal-default fade in" id="acesso_rapido" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
 	  <div class="modal-dialog" role="document" style="width: 20%">
 	    <div class="modal-content">
@@ -197,7 +197,7 @@
 	     <input type="hidden" name="id_cliente" id="cliente">
 	      <div class="modal-header">
 	        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-	        <h4 class="modal-title" id="myModalLabel">Acesso Rapido</h4>
+	        <h4 class="modal-title" id="myModalLabel">Acesso RÃ¡pido</h4>
 	      </div>
 	      	<div class="modal-body">
 		      	<div class="box-body">
@@ -282,8 +282,8 @@
 
 <section class="content-header">
   <h1>
-    Acesso Rápido
-    <small class="text-small-content-header">Frequências semanais do dia <span style="color: #4a4a4a;font-weight:bold;"><?php echo "$dias_semana[$dia_inicio] ($inicioSemana) à  $dias_semana[$dia_final] ($atualSemana)"?></span></small>
+    Acesso RÃ¡pido
+    <small class="text-small-content-header">FrequÃªncias semanais do dia <span style="color: #4a4a4a;font-weight:bold;"><?php echo "$dias_semana[$dia_inicio] ($inicioSemana) Ã  $dias_semana[$dia_final] ($atualSemana)"?></span></small>
   </h1>
 </section>
 
