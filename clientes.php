@@ -47,7 +47,7 @@
 	switch ($action){
 		case "cadastrar":
 			
-			// VALIDA��ES
+			// VALIDACOES
 			//TODO: arrumar essa gambiarra;
 			
 			$celular = str_replace("(", "", $celular);
@@ -59,7 +59,7 @@
 			
 			if(!filter_var($email, FILTER_VALIDATE_EMAIL))
 			{
-				$msg = "[AVISO] E-mail inv�lido, preencha um email correto!";
+				$msg = "[AVISO] E-mail inválido, preencha um email correto!";
 				header("location: clientes.php?msg=$msg&erro=1");
 				die();
 			}
@@ -180,8 +180,8 @@
 				header("location: clientes.php?msg=$msg&erro=1");
 				die();
 			}
-			
-			if(empty($tipo_pagamento))
+
+			if(empty($tipo_pagamento) && $tipo_venda_baixa == 0)
 			{
 				$msg = "[AVISO] Selecione uma forma de pagamento.";
 				header("location: clientes.php?msg=$msg&erro=1");
@@ -210,12 +210,11 @@
 				}
 
 				$tipo_acesso    = lista_tipo_acesso($conn, $id_tipo_acesso);
-				$retorno_insere = insereAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso, ($qtd_acesso * $tipo_acesso[0]['valor_tipo_acesso'] + $valor_taxa));
+				$retorno_insere = insereAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso, ($qtd_acesso * $tipo_acesso[0]['valor_tipo_acesso'] + $valor_taxa), $tipo_pagamento);
 			}
 			//BAIXA ACESSO
 			else if($tipo_venda_baixa == 1)
 			{
-				$valor_taxa  = retornar_valor_taxa($tipo_pagamento, $qtd_acesso);
 				$acesso = listaAcesso($conn, $id_cliente, $id_tipo_acesso);
 				
 				//somo o baixa acesso atual + o total que sera inserido, conseguindo saber se havera divergência
@@ -446,7 +445,14 @@ $(document).ready(function(){
 		$(".input-qtd-acesso").val(total);
 	});
 
-	$(".btn-consumo").click(function(){
+	$(".btn-consumo").click(function()
+	{
+		// Exibe o campo preco total da compra e  tipo de pagamento apenas quando for compra de acesso
+		if($(this).val() == 0)
+			$(".input-preco-acesso, .tipo_pagamento").show("fast");
+		else
+			$(".input-preco-acesso, .tipo_pagamento").hide("fast");
+			
 		if($(this).hasClass("btn-selected"))
 		{
 			$(this).removeClass("btn-selected");
@@ -573,7 +579,7 @@ function number_format( numero, decimal, decimal_separador, milhar_separador ){
 	        <h4 class="modal-title" id="myModalLabel">Alerta!</h4>
 	      </div>
 	      <div class="modal-body">
-	        Voc� realmente deseja deletar o cliente?
+	        Você realmente deseja deletar o cliente?
 	      </div>
 	      <div class="modal-footer">
 	        <button type="button" class="btn btn-danger" data-dismiss="modal">Fechar</button>
@@ -601,10 +607,10 @@ function number_format( numero, decimal, decimal_separador, milhar_separador ){
       				<div class="form-group col-xs-12">
                   		<!-- <label>Quantidade:</label> -->
                   		<input class="form-control verifica input-qtd-acesso" type="text" name="qtd_acesso" value="0"
-                  			style="border: none;font-size: 45px;padding: 5px 0;" />
+                  			style="border: none;font-size: 45px;padding: 5px 0;margin-bottom: 15px;" />
                   		
                   		<input class="form-control verifica input-preco-acesso" type="text" value="R$ 0,00"
-                  			style="height: auto;border: none;font-size: 45px;padding: 5px 0;margin-bottom: 30px;" readonly="readonly"/>
+                  			style="height: auto;border: none;font-size: 45px;padding: 5px 0;margin-bottom: 10px;display:none;" readonly="readonly"/>
                   			
                   		<button type="button" class="col-lg-4 col-xs-4 col-sm-4 btn_add_acesso" value="1">+1</button>
                   		<button type="button" class="col-lg-4 col-xs-4 col-sm-4 btn_add_acesso" value="3">+3</button>
@@ -632,14 +638,14 @@ function number_format( numero, decimal, decimal_separador, milhar_separador ){
 	              	</select>
 	                </div>
 	                
-	                <div class="form-group col-xs-12">
-	                  <label>Formas de Pagamento:</label>
-	                  <select class="tipo_acesso form-control" name="tipo_pagamento" style="width: 100%;">
-	                  	<option></option>
-	                  	<option value="1">Cartão de Débito/Dinheiro</option>
-	                  	<option value="2">Cartão de Crédito</option>
-	                  	<option value="3">Vale Refeição/Alimentação</option>
-	              	</select>
+	                <div class="form-group col-xs-12 tipo_pagamento" style="display:none;">
+	                  	<label>Formas de Pagamento:</label>
+	                  	<select class="tipo_acesso form-control" name="tipo_pagamento" style="width: 100%;">
+		                  	<option></option>
+		                  	<option value="1">Cartão de Débito/Dinheiro</option>
+		                  	<option value="2">Cartão de Crédito</option>
+		                  	<option value="3">Vale Refeição/Alimentação</option>
+	              		</select>
 	                </div>
 	                
 	                <div class="form-group col-xs-12">
@@ -694,22 +700,22 @@ function number_format( numero, decimal, decimal_separador, milhar_separador ){
 	      <input type="hidden" name="id_cliente" id="id_cliente"/>
           	<div class="box-body">
               <div class="row">
-	      		<div class="form-group col-xs-6">
+	      		<div class="form-group col-md-6 col-sm-6 col-xs-12">
                   <label>Nome:</label>
                   <input class="form-control" type="text" name="nome" class="form-control">
                 </div>
 
-                <div class="form-group col-xs-6">
+                <div class="form-group col-md-6 col-sm-6 col-xs-12">
                   <label>E-mail:</label>
                   <input class="form-control" type="text" name="email" class="form-control">
                 </div>
                 
-                <div class="form-group col-xs-6">
+                <div class="form-group ccol-md-6 col-sm-6 col-xs-12">
                   <label>Celular:</label>
                   <input class="form-control" type="text" name="celular" class="form-control" data-inputmask="'mask': '(99) 99999-9999'" data-mask>
                 </div>
                 
-                <div class="form-group col-xs-6">
+                <div class="form-group col-md-6 col-sm-6 col-xs-12">
                   <label>Sexo:</label>
 	                  <select class="form-control select2" name="sexo" style="width: 100%;">
 		                  <option selected="selected" disabled>Selecione o sexo</option>
@@ -718,7 +724,7 @@ function number_format( numero, decimal, decimal_separador, milhar_separador ){
               		  </select>
                 </div>
                 
-                <div class="form-group col-xs-6">
+                <div class="form-group col-md-6 col-sm-6 col-xs-12">
                   <label>Origem:</label>
                   <select class="form-control select2" name="origem" style="width: 100%;">
                   <option selected="selected" disabled>Selecione uma origem</option>
@@ -743,7 +749,7 @@ function number_format( numero, decimal, decimal_separador, milhar_separador ){
               	</select>
                 </div>
                 
-                <div class="form-group col-xs-6">
+                <div class="form-group col-md-6 col-sm-6 col-xs-12">
                   <label>Data de Nascimento:</label>
                   <input class="form-control" type="text" name="data_nasc" class="form-control" id="datepicker" data-inputmask="'alias': 'dd/mm/yyyy'" data-mask>
                 </div>

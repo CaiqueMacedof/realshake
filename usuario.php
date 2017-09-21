@@ -13,7 +13,7 @@
 			
 			if(empty($usuario))
 			{
-				$msg = "[AVISO] O campo usu�rio precisa ser preenchido.";
+				$msg = "[AVISO] O campo usuário precisa ser preenchido.";
 				header("location: usuario.php?msg=$msg&erro=1");
 				die();
 			}
@@ -28,13 +28,13 @@
 			
 			if($retorno)
 			{
-				$msg = "[AVISO] Usu�rio cadastrado com sucesso.";
+				$msg = "[AVISO] Usuário cadastrado com sucesso.";
 				header("location: usuario.php?msg=$msg");
 				die();
 			}
 			else
 			{
-				$msg = "[AVISO] Erro ao cadastrar o usu�rio.";
+				$msg = "[AVISO] Erro ao cadastrar o usuário.";
 				header("location: usuario.php?msg=$msg&erro=1");
 				die();
 			}
@@ -43,24 +43,36 @@
 	}
 ?>
 
+<script>
+
+$( function() {
+
+	$(".fecha-msg").click(function(){
+		var parent = $(this).parent();
+
+		parent.css("display", "none");
+	});
+
+});
+
+</script>
+
 <!-- Content Header (Page header) -->
 <section class="content-header">
   <h1>
-    Atualizar Cliente
+    Cadastro de Usuários
     <small></small>
   </h1>
 </section>
 
-
 <!-- Main content -->
 <section class="content">
-
 	<?php 	
 		if(!empty($msg))
 		{
 			$nomeClasse = ($erro == 0) ? "success" : "danger";
 				
-			echo "<div class='callout callout-$nomeClasse' style='margin:8px 15px 0 15px;position: relative;'>";
+			echo "<div class='callout callout-$nomeClasse' style='position: relative;'>";
  			echo 	"<h4 style='font-weight: normal;'>$msg</h4>";
  			echo 	"<span class='fecha-msg'>X</span>";
 			echo "</div>";
@@ -71,13 +83,13 @@
     <div class="col-xs-12">
         <div class="box box-danger">
         <div class="box-header with-border">
-           <h3 class="box-title">Usu�rio</h3>
+           <h3 class="box-title">Usuário</h3>
         </div>
         
         <form action="usuario.php" method="post">
 	        <div class="box-body">
 	          	<div class="form-group col-lg-6 col-xs-12 col-sm-12">
-                  <label>Usu�rio:</label>
+                  <label>Login/Usuário:</label>
                   <input class="form-control" type="text" name="usuario">
                 </div>
 

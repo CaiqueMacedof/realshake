@@ -13,7 +13,7 @@ $nome		  		= isset($_REQUEST['nome']) 					? $_REQUEST['nome'] 	 			: "";
 $periodo_historico 	= isset($_REQUEST['periodo_historico']) 	? $_REQUEST['periodo_historico'] 	: "";
 
 
-//Lista do banco os tipo de contato. EXEMPLO: indicaÃ§Ã£o, facebook ...
+//Lista do banco os tipo de contato. EXEMPLO: indicacao, facebook ...
 $tipo_contatos = lista_tipo_contato($conn);
 
 switch ($action){
@@ -40,6 +40,12 @@ $total_venda = number_format($total['total_venda'], 2, ',', '.');
 
 $( function() {
 
+	$(".fecha-msg").click(function(){
+		var parent = $(this).parent();
+
+		parent.css("display", "none");
+	});
+	
 	$('#example1').DataTable({
       "paging": 		true,
       "lengthChange": 	true,
@@ -138,7 +144,7 @@ $(document).ready(function(){
 <!-- Content Header (Page header) -->
 <section class="content-header">
   <h1>
-    Histórico de Compras
+    HistÃ³rico de Compras
     <small>Compra de acessos</small>
   </h1>
 </section>
@@ -165,7 +171,7 @@ $(document).ready(function(){
 	
 	          <div class="form-group col-lg-4 col-xs-12 col-sm-6">
 	              <div class="form-group">
-	                <label>Período:</label>
+	                <label>PerÃ­odo:</label>
 	
 	                <div class="input-group">
 	                  <div class="input-group-addon">
@@ -196,7 +202,7 @@ $(document).ready(function(){
     <div class="col-xs-12">
       <div class="box">
         <div class="box-header with-border">
-          <h3 class="box-title">Histórico</h3>
+          <h3 class="box-title">HistÃ³rico</h3>
         </div>
         
         <div class="box-body">
@@ -237,7 +243,7 @@ $(document).ready(function(){
 					
 		            ?>
 		            <tr>
-		            	<td colspan="6" align="center" style="color: #FF0000;font-weight: bold;">Nenhum histórico encontrado.</td>
+		            	<td colspan="6" align="center" style="color: #FF0000;font-weight: bold;">Nenhum histï¿½rico encontrado.</td>
 		            </tr>
 		            
 		            <?php 

@@ -145,17 +145,18 @@ function deletaCliente($conn, $id_cliente)
 	
 }
 
-function insereAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso, $total_venda_acesso)
+function insereAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso, $total_venda_acesso, $tipo_pagamento)
 {
 	$query = sprintf("	INSERT INTO venda_acesso
-						(data_venda, id_tipo_acesso, qtde_acesso, id_cliente, valor_venda_acesso)
+						(data_venda, id_tipo_acesso, qtde_acesso, id_cliente, valor_venda_acesso, tipo_pagamento)
 						VALUES
-						(NOW(), %d, %d, %d, %d)", 
+						(NOW(), %d, %d, %d, %d, %d)", 
 	
 	mysqli_real_escape_string($conn, $id_tipo_acesso),
 	mysqli_real_escape_string($conn, $qtd_acesso),
 	mysqli_real_escape_string($conn, $id_cliente),
-	mysqli_real_escape_string($conn, $total_venda_acesso));
+	mysqli_real_escape_string($conn, $total_venda_acesso),
+	mysqli_real_escape_string($conn, $tipo_pagamento));
 
 	$resultado = mysqli_query($conn, $query);
 	if($resultado != false)
