@@ -34,10 +34,12 @@
 		$sexo	  			= isset($_REQUEST['sexo']) 				? $_REQUEST['sexo'] 	 		: "";
 		
 		//Cadastro de acesso
-		$id_tipo_acesso 	= isset($_REQUEST['id_tipo_acesso']) 	? $_REQUEST['id_tipo_acesso'] 	: "";
-		$qtd_acesso 		= isset($_REQUEST['qtd_acesso']) 		? $_REQUEST['qtd_acesso'] 		: "";
-		$tipo_venda_baixa 	= isset($_REQUEST['tipo_venda_baixa']) 	? $_REQUEST['tipo_venda_baixa'] : null;
-		$tipo_pagamento 	= isset($_REQUEST['tipo_pagamento']) 	? $_REQUEST['tipo_pagamento'] 	: 0;
+		$id_tipo_acesso 	= isset($_REQUEST['id_tipo_acesso']) 		? $_REQUEST['id_tipo_acesso'] 	: "";
+		$qtd_acesso 		= isset($_REQUEST['qtd_acesso']) 			? $_REQUEST['qtd_acesso'] 		: "";
+		$qtd_acesso_uso 	= isset($_REQUEST['qtd_acesso_uso']) 		? $_REQUEST['qtd_acesso_uso'] 	: null;
+		$qtd_acesso_total 	= isset($_REQUEST['qtd_acesso_total']) 		? $_REQUEST['qtd_acesso_total'] : null;
+		$tipo_venda_baixa 	= isset($_REQUEST['tipo_venda_baixa']) 		? $_REQUEST['tipo_venda_baixa'] : null;
+		$tipo_pagamento 	= isset($_REQUEST['tipo_pagamento']) 		? $_REQUEST['tipo_pagamento'] 	: 0;
 	}
 	
 	
@@ -46,40 +48,14 @@
 
 	switch ($action){
 		case "cadastrar":
-			
-			// VALIDACOES
-			//TODO: arrumar essa gambiarra;
-			
-			$celular = str_replace("(", "", $celular);
-			$celular = str_replace(")", "", $celular);
-			$celular = str_replace(" ", "", $celular);
-			$celular = str_replace("-", "", $celular);
-			$celular = str_replace("_", "", $celular);
-			
-			
-			if(!filter_var($email, FILTER_VALIDATE_EMAIL))
+			if($nome != "" && $origem != "" && $sexo != "")
 			{
-				$msg = "[AVISO] E-mail inválido, preencha um email correto!";
-				header("location: clientes.php?msg=$msg&erro=1");
-				die();
-			}
-			
-			if(strlen($celular) > 0)
-			{
-				if(strlen($celular) != 11)
-				{
-					$msg = "[AVISO] Preencha corretamente o campo celular!";
-					header("location: clientes.php?msg=$msg&erro=1");
-					die();
-				}
-			}
-			
-			if($nome != "" && $email !== "" && $celular != "" && $origem != "" && $data_nasc != "" && $sexo != "")
-			{
-				$data_formatada = date("Y-m-d", strtotime($data_nasc));
-
+				if(!empty($data_nasc))
+					$data_formatada = date("Y-m-d", strtotime($data_nasc));
+				else
+					$data_formatada = "NULL";
+				
 				$resultado = insertCliente($conn, $nome, $email, $celular, $data_formatada, $origem, $sexo);
-
 				if($resultado)
 				{
 					$msg = "[AVISO] Cliente cadastrado com sucesso!";
@@ -164,23 +140,8 @@
 		break;
 		
 		case 'inserir':
-			
 			$id_cliente = isset($_REQUEST['id_cliente']) ? $_REQUEST['id_cliente'] : null;
 			
-			if($tipo_venda_baixa == "" || empty($id_tipo_acesso)|| empty($qtd_acesso))
-			{
-				$msg = "[AVISO] Por favor preencher todos os campos do cadastro!";
-				header("location: clientes.php?msg=$msg&erro=1");
-				die();
-			}
-			
-			if($qtd_acesso <= 0)
-			{
-				$msg = "[AVISO] Quantidade de acesso deve ser maior que 0.";
-				header("location: clientes.php?msg=$msg&erro=1");
-				die();
-			}
-
 			if(empty($tipo_pagamento) && $tipo_venda_baixa == 0)
 			{
 				$msg = "[AVISO] Selecione uma forma de pagamento.";
@@ -188,77 +149,60 @@
 				die();
 			}
 			
-			//INSERE ACESSO
-			if($tipo_venda_baixa == 0)
+			for($i = 0; $i < count($id_tipo_acesso); $i++)
 			{
-				$valor_taxa  	= retornar_valor_taxa($tipo_pagamento, $qtd_acesso);
-				$acesso 	 	= listaAcesso($conn, $id_cliente, $id_tipo_acesso);
-				$total_pendente = listar_pendente_cliente($conn, $id_cliente);
-				
-				$qtd_acessos = ($acesso['total'] + $qtd_acesso) - $acesso['consumido'];
-				
-				if($qtd_acessos < 0)
+				/***********************
+				 **** VENDA DO ACESSO ****
+				 ***********************/
+				if($qtd_acesso_total[$i] > 0)
 				{
-					$qtd_acessos = $qtd_acessos * -1;
-					$valor_total = retornar_preco_total_acesso($conn, $id_tipo_acesso, $qtd_acessos);
+					$valor_taxa  	= retornar_valor_taxa($tipo_pagamento, $qtd_acesso_total[$i]);
+					$acesso 	 	= listaAcesso($conn, $id_cliente, $id_tipo_acesso[$i]);
+					$total_pendente = listar_pendente_cliente($conn, $id_cliente);
 					
-					replace_cliente_pendente($conn, $id_cliente, $id_tipo_acesso, $valor_total + $valor_taxa);
+					$qtd_acessos = ($acesso['total'] + $qtd_acesso_total[$i]) - $acesso['consumido'];
+					
+					if($qtd_acessos < 0)
+					{
+						$qtd_acessos = $qtd_acessos * -1;
+						$valor_total = retornar_preco_total_acesso($conn, $id_tipo_acesso[$i], $qtd_acessos);
+						
+						replace_cliente_pendente($conn, $id_cliente, $id_tipo_acesso[$i], $valor_total + $valor_taxa);
+					}
+					else
+					{ 
+						deleta_cliente_pendente($conn, $id_cliente);
+					}
+	
+					$tipo_acesso    = lista_tipo_acesso($conn, $id_tipo_acesso[$i]);
+					$retorno_insere = insereAcesso($conn, $id_cliente, $id_tipo_acesso[$i], $qtd_acesso_total[$i], ($qtd_acesso_total[$i] * $tipo_acesso[0]['valor_tipo_acesso'] + $valor_taxa), $tipo_pagamento);
 				}
-				else
-				{ 
-					deleta_cliente_pendente($conn, $id_cliente);
-				}
-
-				$tipo_acesso    = lista_tipo_acesso($conn, $id_tipo_acesso);
-				$retorno_insere = insereAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso, ($qtd_acesso * $tipo_acesso[0]['valor_tipo_acesso'] + $valor_taxa), $tipo_pagamento);
-			}
-			//BAIXA ACESSO
-			else if($tipo_venda_baixa == 1)
-			{
-				$acesso = listaAcesso($conn, $id_cliente, $id_tipo_acesso);
 				
-				//somo o baixa acesso atual + o total que sera inserido, conseguindo saber se havera divergência
-				$qtd_acessos = $acesso['total'] - ($acesso['consumido'] + $qtd_acesso);
+				/*************************
+				 **** BAIXA DO ACESSO ****
+				 *************************/
 				
-				if($qtd_acessos < 0)
+				if($qtd_acesso_uso[$i] > 0)
 				{
-					$qtd_acessos = $qtd_acessos * -1;
-					$valor_total = retornar_preco_total_acesso($conn, $id_tipo_acesso, $qtd_acessos);
-
-					replace_cliente_pendente($conn, $id_cliente, $id_tipo_acesso, $valor_total + $valor_taxa);
+					$acesso = listaAcesso($conn, $id_cliente, $id_tipo_acesso[$i]);
+					
+					//somo o baixa acesso atual + o total que sera inserido, conseguindo saber se havera divergência
+					$qtd_acessos = $acesso['total'] - ($acesso['consumido'] + $qtd_acesso_uso[$i]);
+					
+					if($qtd_acessos < 0)
+					{
+						$qtd_acessos = $qtd_acessos * -1;
+						$valor_total = retornar_preco_total_acesso($conn, $id_tipo_acesso[$i], $qtd_acessos);
+	
+						replace_cliente_pendente($conn, $id_cliente, $id_tipo_acesso[$i], $valor_total + $valor_taxa);
+					}
+					
+					$retorno_baixa = baixaAcesso($conn, $id_cliente, $id_tipo_acesso[$i], $qtd_acesso_uso[$i]);
 				}
-				
-				$retorno_baixa = baixaAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso);
 			}
 				
-				
-			if(isset($retorno_insere) && $retorno_insere != false)
-			{
-				if(!empty($paginacao))
-					header("location: clientes.php?msg=Acesso inserido com sucesso!&" . $paginacao);
-				else
-					header("location: clientes.php?msg=Acesso inserido com sucesso!");
-		
-						exit();
-			}
-			else if(isset($retorno_baixa) && $retorno_baixa != false)
-			{
-				if(!empty($paginacao))
-					header("location: clientes.php?msg=[AVISO] Baixa no acesso com sucesso!&" . $paginacao);
-				else
-					header("location: clientes.php?msg=Baixa no acesso com sucesso!");
-		
-						exit();
-			}
-			else
-			{
-				if(!empty($paginacao))
-					header("location: clientes.php?msg=[AVISO] Erro ao inserir/baixar o acesso!&erro=1&" . $pagi);
-				else
-					header("location: clientes.php?msg=[AVISO]Erro ao inserir/baixar o acesso!&erro=1");
-							
-						exit();
-			}
+			header("location: clientes.php?msg=Acesso inserido com sucesso!");
+			exit();
 				
 			break;
 		
@@ -332,7 +276,7 @@ $(document).ready(function(){
   //Datemask dd/mm/yyyy
   $("#datemask").inputmask("dd/mm/yyyy", {"placeholder": "dd/mm/yyyy"});
   //Datemask2 mm/dd/yyyy
-  $("#datemask2").inputmask("mm/dd/yyyy", {"placeholder": "mm/dd/yyyy"});
+  $("#datemask2").inputmask("dd/mm/yyyy", {"placeholder": "mm/dd/yyyy"});
   //Money Euro
   $("[data-mask]").inputmask();
 
@@ -354,10 +298,29 @@ $(document).ready(function(){
 	
 	$(document).keyup(function(e)
 	{
-		  if (e.keyCode === 13)// enter
-			  $(".pop-up-tabela #1, .pop-up-tabela #2, .pop-up-tabela #3").remove();//Remove as linhas criadas no ajax;   
-		  if (e.keyCode === 27)// esc
-			  $(".pop-up-tabela #1, .pop-up-tabela #2, .pop-up-tabela #3").remove();   
+		if (e.keyCode === 13)// ENTER
+		{
+			//reseta os campos do pop-up quando fechado
+			$(".uso").val("0");
+			$(".total").val("0");
+			$(".input-preco-acesso").val("R$ 0,00");
+			$('.tipo_acesso option[value=0]').attr('selected',true);
+			$('.tipo_pagamento option[value=0]').attr('selected',true);
+			
+			$(".pop-up-tabela #1, .pop-up-tabela #2, .pop-up-tabela #3").remove();//Remove as linhas criadas no ajax;   
+		}
+		  
+		if (e.keyCode === 27)// ESC
+		{
+		  	//reseta os campos do pop-up quando fechado
+			$(".uso").val("0");
+			$(".total").val("0");
+			$(".input-preco-acesso").val("R$ 0,00");
+			$('.tipo_acesso option[value=0]').attr('selected',true);
+			$('.tipo_pagamento option[value=0]').attr('selected',true);
+			
+			$(".pop-up-tabela #1, .pop-up-tabela #2, .pop-up-tabela #3").remove();
+		}
 	});
 	
 	$(document).on("click", ".fa-list-alt", function(){
@@ -426,6 +389,13 @@ $(document).ready(function(){
 
 	$(".btn_close").click(function(){
 		
+		//reseta os campos do pop-up quando fechado
+		$(".uso").val("0");
+		$(".total").val("0");
+		$(".input-preco-acesso").val("R$ 0,00");
+		$('.tipo_acesso option[value=0]').attr('selected',true);
+		$('.tipo_pagamento option[value=0]').attr('selected',true);
+
 		//Remove as linhas criadas no ajax;
 		$(".pop-up-tabela #1, .pop-up-tabela #2, .pop-up-tabela #3").remove();
 	});
@@ -437,14 +407,33 @@ $(document).ready(function(){
 	});
 
 	$(".btn_add_acesso").click(function(){
-		var qtd_botao = $(this).val();
-		var qtd_input = parseInt($(".input-qtd-acesso").val()) || 0;
+		//USO
+		if($(".btn-selected").val() == 0)
+		{
+			if($(".uso").val() == "")
+	 			var qtd_input = 0;
+	 		else
+	 			var qtd_input = parseInt($(".uso").val());
 
-		var total = parseInt(qtd_botao) + parseInt(qtd_input);
-		//SETO OS VALORES NO INPUT DOS ACESSO
-		$(".input-qtd-acesso").val(total);
+			var total = parseInt($(this).val()) + parseInt(qtd_input);
+			
+	 		$(".uso").val(total);
+	 		$(".uso").css("width", ($(".uso").val().length * 23) + "px");
+		}
+	 	else if($(".btn-selected").val() == 1)//TOTAL
+	 	{
+	 		if($(".total").val() == "")
+	 			var qtd_input = 0;
+	 		else
+	 			var qtd_input = parseInt($(".total").val());
+
+			var total = parseInt($(this).val()) + parseInt(qtd_input);
+	 		
+	 		$(".total").val(total);
+	 		$(".total").css("width", ($(".total").val().length * 23) + "px");
+	 	}
 	});
-
+	
 	$(".btn-consumo").click(function()
 	{
 		// Exibe o campo preco total da compra e  tipo de pagamento apenas quando for compra de acesso
@@ -452,7 +441,10 @@ $(document).ready(function(){
 			$(".input-preco-acesso, .tipo_pagamento").show("fast");
 		else
 			$(".input-preco-acesso, .tipo_pagamento").hide("fast");
-			
+	});
+
+	$(".btn-consumo, .btn-acesso").click(function()
+	{
 		if($(this).hasClass("btn-selected"))
 		{
 			$(this).removeClass("btn-selected");
@@ -460,14 +452,14 @@ $(document).ready(function(){
 		}
 		else
 		{
-			if($(".btn-consumo").next().hasClass("btn-selected"))
+			if($(".btn-consumo, .btn-acesso").next().hasClass("btn-selected"))
 			{
-				$(".btn-consumo").next().removeClass("btn-selected")
+				$(".btn-consumo, .btn-acesso").next().removeClass("btn-selected")
 				$(".input_hidden").attr("value", '');
 			}
-			else if($(".btn-consumo").before().hasClass("btn-selected"))
+			else if($(".btn-consumo, .btn-acesso").before().hasClass("btn-selected"))
 			{
-				$(".btn-consumo").before().removeClass("btn-selected");
+				$(".btn-consumo, .btn-acesso").before().removeClass("btn-selected");
 				$(".input_hidden").attr("value", '');
 			}
 				
@@ -475,7 +467,17 @@ $(document).ready(function(){
 			$(".input_hidden").attr("value", $(this).val());
 		}
 	});
-
+	
+	$(".total").keydown(function()
+	{
+		$(".total").css("width", (($(".total").val().length * 23) + 20) + "px");
+	});
+	
+	$(".uso").keydown(function()
+	{
+		$(".uso").css("width", (($(".uso").val().length * 23) + 20) + "px");
+	});
+	
 	$(".tipo_acesso, .input-qtd-acesso").change(function(){
 		var tipo 		 = $(".tipo_acesso").val();
 		var preco_acesso = [15,16,17];
@@ -487,10 +489,90 @@ $(document).ready(function(){
 	 $(".btn_add_acesso").click(function(){
 		var tipo 		 = $(".tipo_acesso").val();
 		var preco_acesso = [15,16,17];
-		var qtd_acesso 	 = $(".input-qtd-acesso").val();
-		
+		var qtd_acesso 	 = $(".total").val();
+
 		$(".input-preco-acesso").val("R$ " + number_format(preco_acesso[tipo-1]*qtd_acesso, 2, ",", "."));
 	 })
+	 
+	 $(".btn_ver_acesso").click(function(){
+	 	if($(".div_acessos").css("display") == "none")
+	 		$(".div_acessos").slideDown("fast");
+	 	else
+	 		$(".div_acessos").slideUp("fast");
+	 });
+	 
+	 $(document).on("click", ".icon_remover", function()
+	 {
+		$(this).closest("tr").remove();
+		
+		if($(".tr_carrinho_acesso tr").length == 1)
+		{
+			$(".tr_preco_total").remove();
+			$(".tr_carrinho_acesso").append("<tr class='tr_vazio'><td align='center' colspan='5'><b style='color:red;'>Carrinho vazio.<b></td></tr>");
+		}
+		else
+		{
+			var total = 0;
+			$(".valor").each(function(){
+				total = parseFloat(total) + parseFloat($(this).text());
+			});
+		
+			$(".tr_preco_total").remove();
+			$(".tr_carrinho_acesso").append("<tr class='tr_preco_total'><td colspan='3' align='right'><b>Total:</b></td><td class='valor_total'>R$ "+number_format(total, 2, ",", ".")+"</td><td></td></tr>");
+		}
+	 });
+	 
+	 $(".btn_add_carrinho").click(function(){
+	 	var tipo_acesso = $(".tipo_acesso").val();
+	 	var uso = $(".uso").val();
+	 	var total = $(".total").val();
+	 	var preco_total = $(".input-preco-acesso").val().replace("R$ ","");
+	 	var produtos = ["Shake", "Sopa", "NutriSoup"];
+		
+		if(tipo_acesso == 0 || uso == 0 && total == 0)
+		{
+			alert("Por favor, preencha os campos corretamente.");
+			return false;
+		}
+		
+		//RESWETO OS CAMPOS
+		$(".uso").val(0);
+		$(".total").val(0);
+		$(".input-preco-acesso").val("R$ " + number_format(0, 2, ",", "."));
+		$(".tipo_acesso option:first").attr('selected','selected');
+		
+		if($(".tr_carrinho_acesso .tr_vazio").length == 1)
+			$(".tr_vazio").remove();
+
+	 	$(".tr_carrinho_acesso").append("	<tr>"+
+	 											"<td>"+
+	 												"<input type='hidden' name='id_tipo_acesso[]' value='"+ tipo_acesso +"'/>"
+	 												+ produtos[tipo_acesso-1] +
+ 												"</td>"+
+ 												
+ 												"<td>"+
+	 												"<input type='hidden' name='qtd_acesso_uso[]' value='"+ uso +"'/>"
+	 												+ uso +
+	 											"</td>"+
+	 											
+	 											"<td>"+
+	 												"<input type='hidden' name='qtd_acesso_total[]' value='"+ total +"'/>"
+	 												+ total +
+ 												"</td>"+
+ 												
+ 												"<td class='valor'>"+preco_total+"</td>"+
+ 												
+ 												"<td align='center'><i class='fa fa-remove icon_remover' style='color: red'></i></td>"+
+											"</tr>");
+		
+		var total = 0;
+		$(".valor").each(function(){
+			total = parseFloat(total) + parseFloat($(this).text());
+		});
+		
+		$(".tr_preco_total").remove();
+		$(".tr_carrinho_acesso").append("<tr class='tr_preco_total'><td colspan='3' align='right'><b>Total:</b></td><td class='valor_total'>R$ "+number_format(total, 2, ",", ".")+"</td><td></td></tr>");
+	 });
 });
 
 function number_format( numero, decimal, decimal_separador, milhar_separador ){ 
@@ -518,7 +600,7 @@ function number_format( numero, decimal, decimal_separador, milhar_separador ){
 </script>
 
 <style>
-	.btn_add_acesso, .btn-consumo
+	.btn_add_acesso, .btn-consumo, .btn-acesso
 	{
 		padding: 5px;
 	}
@@ -541,7 +623,7 @@ function number_format( numero, decimal, decimal_separador, milhar_separador ){
 	
 	table tr td .fa
 	{
-		font-size: 18px;
+		font-size: 22px;
 	}
 	
 </style>
@@ -590,7 +672,7 @@ function number_format( numero, decimal, decimal_separador, milhar_separador ){
 	  </div>
 	</div>
 	
-  	<!-- Modal ACESSOS -->
+	<!-- Modal ACESSOS -->
 	<div class="modal fade in" id="cadastro-acesso" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
 	  <div class="modal-dialog modal-dispositivo" role="document" style="width: 380px;">
 	    <div class="modal-content">
@@ -604,23 +686,36 @@ function number_format( numero, decimal, decimal_separador, milhar_separador ){
 	      <div class="modal-body">
 	      	<div class="box-body">
       			<div class="row">
-      				<div class="form-group col-xs-12">
-                  		<!-- <label>Quantidade:</label> -->
-                  		<input class="form-control verifica input-qtd-acesso" type="text" name="qtd_acesso" value="0"
-                  			style="border: none;font-size: 45px;padding: 5px 0;margin-bottom: 15px;" />
+      				<div class="form-group col-xs-12" style="display: flex;">
+      					<div style="display: flex;">
+	                  		<input class="form-control verifica uso" type="text" name="qtd_acesso_uso" value="0"
+	                  			style="height: 50px;border: none;font-size: 45px;padding: 0;width: 30px" />
+	                  			<span style="font-size: 35px;width: 18px;">/</span>
+	              			<input class="form-control verifica input-qtd-acesso total" type="text" name="qtd_acesso_total" value="0"
+	                  			style="height: 50px;border: none;font-size: 45px;padding: 0;width: 30px;" />
+						  </div>
                   		
                   		<input class="form-control verifica input-preco-acesso" type="text" value="R$ 0,00"
-                  			style="height: auto;border: none;font-size: 45px;padding: 5px 0;margin-bottom: 10px;display:none;" readonly="readonly"/>
-                  			
+                  			style="text-align: right;height: 50px;border: none;font-size: 45px;padding: 0;" readonly="readonly"/>
+                  	</div>
+                  	
+                  	<div class="form-group col-xs-12" style="margin-bottom: 10px;">
+	                	<div>
+	                		<input type="hidden" name="tipo_venda_baixa" class="input_hidden">
+	                		<button type="button" value="0" class="col-lg-6 col-xs-6 col-sm-6 btn-acesso">USO</button>
+                  			<button type="button" value="1" class="col-lg-6 col-xs-6 col-sm-6 btn-acesso btn-selected">TOTAL</button>
+	                	</div>
+              		</div>
+              		
+                  	<div class="form-group col-xs-12">	
                   		<button type="button" class="col-lg-4 col-xs-4 col-sm-4 btn_add_acesso" value="1">+1</button>
                   		<button type="button" class="col-lg-4 col-xs-4 col-sm-4 btn_add_acesso" value="3">+3</button>
                   		<button type="button" class="col-lg-4 col-xs-4 col-sm-4 btn_add_acesso" value="5">+5</button>
                   	</div>
                   	
 	                <div class="form-group col-xs-12">
-	                  <label>Tipos de acesso:</label>
 	                  <select class="tipo_acesso form-control select2 verifica" name="id_tipo_acesso" style="width: 100%;">
-	                  	<option></option>
+	                  	<option value="0">Tipos de acesso</option>
 						<?php 
 							if(is_array($tipos_acesso) && count($tipos_acesso) > 0)
 							{
@@ -638,33 +733,51 @@ function number_format( numero, decimal, decimal_separador, milhar_separador ){
 	              	</select>
 	                </div>
 	                
-	                <div class="form-group col-xs-12 tipo_pagamento" style="display:none;">
-	                  	<label>Formas de Pagamento:</label>
-	                  	<select class="tipo_acesso form-control" name="tipo_pagamento" style="width: 100%;">
-		                  	<option></option>
+	                <div class="form-group col-xs-12 tipo_pagamento">
+	                  	<select class="tipo_pagamento form-control" name="tipo_pagamento" style="width: 100%;">
+		                  	<option>Formas de Pagamento</option>
 		                  	<option value="1">Cartão de Débito/Dinheiro</option>
-		                  	<option value="2">Cartão de Crédito</option>
-		                  	<option value="3">Vale Refeição/Alimentação</option>
+		                  	<!--option value="2">Cartão de Crédito</option>
+		                  	<option value="3">Vale Refeição/Alimentação</option-->
 	              		</select>
 	                </div>
 	                
-	                <div class="form-group col-xs-12">
-	                	<label>
-		                  Acesso
-		                </label>
-	                	
-	                	<div>
-	                		<input type="hidden" name="tipo_venda_baixa" class="input_hidden">
-	                		<button type="button" value="0" class="col-lg-6 col-xs-6 col-sm-6 btn-consumo"><i class="fa fa-caret-up"></i>&nbsp Compra</button>
-                  			<button type="button" value="1" class="col-lg-6 col-xs-6 col-sm-6 btn-consumo"><i class="fa fa-caret-down"></i>&nbsp Consumo</button>
-	                	</div>
-              		</div>
-              		
-	                <div class="form-group col-xs-12" style="margin: 15px 0 0 0;">
+	                <div class="form-group col-xs-8" style="margin: 15px 0 0 0;">
 	                  	<b>Cliente: <span class="nome_cliente"></span></b>
 	                </div>
+					
+					<!--div class="form-group col-xs-4" style="margin: 15px 0 0 0;">
+						<button type="button" class="col-lg-12 col-xs-12 col-sm-12 btn_add_carrinho">+Add</button>
+					</div>	                
+	                <div class="box-body col-xs-12" style="max-height: 185px;overflow: auto;">
+	                	<table class="table table-bordered">
+			            <thead>
+			              <tr style="background-color: #eee;font-size: 15px;">
+			              	<th colspan="5"><i class="fa fa-shopping-cart" style="margin-right:3px;"></i>Carrinho de Compra</th>
+			              </tr>
+			              
+			              <tr style="background-color: #eee;font-size: 12px;">
+			              	<th>Produto</th>
+			              	<th style="text-align: center;">Uso</th>
+			              	<th style="text-align: center;">Total</th>
+			              	<th style="text-align: center;">Valor</th>
+			              	<th style="text-align: center;">Remover</th>
+			              </tr>
+			             </thead>
+			             
+			             <tbody class="tr_carrinho_acesso" style="font-size: 12px;">
+			              	<tr class="tr_vazio">
+								<td align="center" colspan="5"><b style="color:red;">Carrinho vazio.<b></b></b></td>
+			             	</tr>
+			             </tbody>
+			            </table>
+	                </div>
 	                
-	                <div class="box-body col-xs-12">
+	                <div class="box-body col-xs-12" style="padding-bottom: 0;">
+	                	<button type="button" class="col-lg-12 col-xs-12 col-sm-12 btn_ver_acesso">VER ACESSOS<i class="fa fa-chevron-down" style="margin-left: 2px;"></i></button>
+	                </div-->
+	                
+	                <div class="box-body col-xs-12 div_acessos" >
 	                	<table class="table table-bordered table-hover pop-up-tabela" style="background-color: #eee;">
 			            <thead>
 			              <tr>
@@ -679,7 +792,7 @@ function number_format( numero, decimal, decimal_separador, milhar_separador ){
 	      
 	      <div class="modal-footer">
 	        <button type="button" class="btn btn-danger btn_close" data-dismiss="modal">Fechar</button>
-	        <button type="submit" class="btn btn-success" name="acao" value="inserir">Prosseguir</button>
+	        <button type="submit" class="btn btn-success" name="acao" value="inserir">Comprar</button>
 	      </div>
 	     
 	     </form>
@@ -852,16 +965,19 @@ function number_format( numero, decimal, decimal_separador, milhar_separador ){
                 <td><?php echo $cliente['NOME']; ?></td>
                 <td align="center" class="esconde_coluna"><?php echo $cliente['CELULAR']; ?></td>
                 <td align="center">
-                	<i class="fa fa-calendar" aria-hidden="true"></i>
+                	<a href="cliente_frequencia.php?id=<?php echo $cliente['ID_CLIENTE']?>">
+	                	<i class="fa fa-calendar" aria-hidden="true"></i>
+            		</a>
                 </td>
                 <td align="center">
-                	<i class="fa fa-list-alt" aria-hidden="true" data-toggle="modal" data-target="#cadastro-acesso"
+            		<i class="fa fa-list-alt" aria-hidden="true" data-toggle="modal" data-target="#cadastro-acesso"
                 		data-nome="<?php echo $cliente['NOME']; ?>" data-cliente="<?php echo $cliente['ID_CLIENTE']; ?>"></i>
-                </td>
+	            </td>
                 
                 <td align="center">
                 	<a href="cliente.php?acao=editar&id_cliente=<?php echo $cliente['ID_CLIENTE'];?>">
-                	<i class="fa fa-pencil" aria-hidden="true"></i>
+                		<i class="fa fa-pencil" aria-hidden="true"></i>
+                	</a>
                 </td>
                 
                 <td align="center">

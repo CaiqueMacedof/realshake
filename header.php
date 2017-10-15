@@ -92,7 +92,38 @@
 	<script src="plugins/input-mask/jquery.inputmask.extensions.js"></script>
 </head>
 
-<body class="hold-transition skin-red sidebar-mini <?php echo isset($_COOKIE['max-min-menu']) ? $_COOKIE['max-min-menu'] : ""?>">
+<body onload="startTime()" class="hold-transition skin-red sidebar-mini <?php echo isset($_COOKIE['max-min-menu']) ? $_COOKIE['max-min-menu'] : ""?>">
+
+<script type="text/javascript">
+function startTime() {
+	var today=new Date();
+	var h=today.getHours();
+	var m=today.getMinutes();
+	var s=today.getSeconds();
+	// add a zero in front of numbers<10
+	h=checkTime(h);
+	m=checkTime(m);
+	document.getElementById('relogio').innerHTML=h+":"+m;
+	t=setTimeout('startTime()',500);
+}
+
+function checkTime(i){
+	if (i<10) {
+		i="0" + i;
+	}
+	return i;
+}
+</script>
+<style>
+#relogio
+{
+    padding: 8px 15px;
+    background: #00a458;
+    color: white;
+    font-size: 25px;
+    font-weight: bold;
+}
+</style>
 <div class="wrapper">
   <!-- Main Header -->
   <header class="main-header">
@@ -116,6 +147,7 @@
 
       <!-- Sidebar Menu -->
       <ul class="sidebar-menu">
+      	<li><div id="relogio"></div></li>
         <li class="header">Menu de Navegação</li>
         
     	<li id="1" class="treeview">
@@ -130,24 +162,32 @@
             </span>
           </a>
           <ul class="treeview-menu">
-            <li id="2-1"><a href="clientes.php">Clientes</a></li>
-            <li id="2-2"><a href="cliente_acesso_rapido.php">Acesso rápido</a></li>
-            <li id="2-3"><a href="clientes_historico.php">Histórico de Compra</a></li>
+            <li id="2-2"><a href="clientes.php">Clientes</a></li>
+            <li id="2-3"><a href="cliente_acesso_rapido.php">Acesso rápido</a></li>
+            <li id="2-4"><a href="clientes_historico.php">Histórico de Compra</a></li>
           </ul>
         </li>
     	
     	<li id="3" class="treeview">
-          <a href="#"><i class="fa fa-shopping-bag"></i><span>Produtos</span></a>
+          <a href="#"><i class="fa fa-shopping-bag"></i><span>Produtos</span>
+          	<span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+          </a>
+          <ul class="treeview-menu">
+            <li id="3-1"><a href="produtos.php">Produtos</a></li>
+            <li id="3-2"><a href="produtos_historico.php">Histórico de Compra</a></li>
+          </ul>
         </li>
         
-        <li id="3" class="treeview">
+        <li id="4" class="treeview">
           <a href="#"><i class="fa fa-cog"></i><span>Configurações</span>
           	<span class="pull-right-container">
               <i class="fa fa-angle-left pull-right"></i>
             </span>
           </a>
           <ul class="treeview-menu">
-            <li id="3-1"><a href="usuario.php">Criar Usuário</a></li>
+            <li id="4-1"><a href="usuario.php">Criar Usuário</a></li>
           </ul>
         </li>
         

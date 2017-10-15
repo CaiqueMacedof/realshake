@@ -1,7 +1,6 @@
 <?php
 function insertCliente($conn, $nome, $email, $celular, $data_nasc, $origem, $sexo)
 {
-	
 	$query = sprintf("INSERT INTO cliente
 				     (
 					  nome, celular, data_aniversario, 
@@ -10,24 +9,23 @@ function insertCliente($conn, $nome, $email, $celular, $data_nasc, $origem, $sex
 					 )
 			 		 VALUES
 					 (
-					  '%s', '%s', '%s', 
+					  '%s', '%s', ".mysqli_real_escape_string($conn, $data_nasc).", 
 					  '%s', NOW(), '%s',
 					  %d
 					  )", 
 			
 			mysqli_real_escape_string($conn, $nome),
 			mysqli_real_escape_string($conn, $celular),
-			mysqli_real_escape_string($conn, $data_nasc),
 			
 			mysqli_real_escape_string($conn, $email),
 			mysqli_real_escape_string($conn, $origem),
 			mysqli_real_escape_string($conn, $sexo));
-
+	
 	$result = mysqli_query($conn, $query);
 	if($result)
 		return true;
 	else
-		return false;
+		return mysqli_error($conn);
 }
 
 
@@ -157,7 +155,7 @@ function insereAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso, $total_v
 	mysqli_real_escape_string($conn, $id_cliente),
 	mysqli_real_escape_string($conn, $total_venda_acesso),
 	mysqli_real_escape_string($conn, $tipo_pagamento));
-
+	//echo$query;die;
 	$resultado = mysqli_query($conn, $query);
 	if($resultado != false)
 		return $resultado;
@@ -250,9 +248,9 @@ function listarHistoricoCliente($conn, $agrupar = FALSE, $nome = FALSE, $dataHor
 						    valor_venda_acesso
 						    
 						FROM venda_acesso as va
-						INNER JOIN cliente as cli
+						LEFT JOIN cliente as cli
 						on va.id_cliente = cli.id_cliente
-						INNER JOIN tipo_acesso as ta
+						LEFT JOIN tipo_acesso as ta
 						on va.id_tipo_acesso = ta.id_tipo_acesso
 					 	
 						where 1 = 1"
@@ -292,7 +290,7 @@ function totalQtdVendaAcesso($conn, $nome = FALSE, $dataHora_inicio = FALSE, $da
 						    sum(va.valor_venda_acesso) as total_venda
 						    
 						FROM venda_acesso as va
-						INNER JOIN cliente as cli
+						LEFT JOIN cliente as cli
 						on va.id_cliente = cli.id_cliente
 					");
 	
@@ -365,22 +363,26 @@ function frequenciaHoje($conn, $dataHoje)
 		return false;
 }
 
-function buscarNaoFrequencia($conn, $id_clientes = false)
+function buscarFrequencias($conn, $nome=null, $celular=null)
 {
 	$query = "	SELECT
-					c.id_cliente,
-					c.nome,
-					c.sexo
-				FROM baixa_acesso  AS ba
-				INNER JOIN cliente AS c
-				ON ba.id_cliente = c.id_cliente
-				WHERE 1 = 1";
+					cli.ID_CLIENTE,
+					cli.nome,
+					cli.sexo,
+					SUM(ba.qtde_acesso) AS total_frequencia
+				FROM real_shake.baixa_acesso AS ba
+				INNER JOIN cliente AS cli ON ba.ID_CLIENTE = cli.id_cliente
+				WHERE 1=1";
 
-	if($id_clientes != false)
-		$query .= " AND c.id_cliente NOT IN($id_clientes)";
-		 
-	$query .= " GROUP BY id_cliente";
-	
+	if(!empty($nome))
+		$query .= " AND cli.nome LIKE '%".mysqli_real_escape_string($conn, $nome)."%'";
+
+	if(!empty($celular))
+		$query .= " AND cli.celular LIKE '".mysqli_real_escape_string($conn, $celular)."%'";
+
+	$query .=	" GROUP BY ba.id_cliente
+				  ORDER BY total_frequencia DESC;";
+	//echo $query;die;
 	$resultado = mysqli_query($conn, $query);
 	if($resultado != false)
 		return mysqli_fetch_all_mod($resultado);
@@ -505,4 +507,190 @@ function listar_pendente_cliente($conn, $id_cliente)
 	{
 		return false;
 	}
+}
+
+function listar_cliente_freq($conn, $id_cliente)
+{
+	$id_cliente = mysqli_real_escape_string($conn, $id_cliente);
+	$query 		= "	SELECT
+						ba.id_cliente,
+						ta.nome,
+						ta.id_tipo_acesso,
+						date_format(ba.data_hora_baixa_acesso, '%Y-%m-%d') as data,
+						SUM(ba.qtde_acesso) as qtd_acesso
+					FROM baixa_acesso as ba
+					INNER JOIN tipo_acesso as ta
+					on ba.id_tipo_acesso = ta.id_tipo_acesso
+					WHERE id_cliente = $id_cliente
+					GROUP BY date_format(ba.data_hora_baixa_acesso, '%Y-%m-%d'), ba.id_tipo_acesso 
+					ORDER BY date_format(ba.data_hora_baixa_acesso, '%Y-%m-%d') ASC;";
+
+	$resultado = mysqli_query($conn, $query);
+	if($resultado !== false)
+		return mysqli_fetch_all_mod($resultado);
+	else
+		return false;
+}
+
+function gerar_calendario($conn, $id_cliente, $ano_inical, $ano_final)
+{
+	$k 		  	 = 0;
+	$nome_semana = array("Domingo", "Segunda-Feira", "Terça-Feira", "Quarta-Feira", "Quinta-Feira", "Sexta-Feira", "Sabado");
+	$nome_mes 	 = array("Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro");
+
+	// GERA UM ARRAY DE ARRAY COM VARIOS OBJETOS DO CALENDARIO
+	for ($x = $ano_inical; $x <= $ano_final; $x++)
+	{
+		for ($i = 0; $i < 12; $i++)
+		{
+			$ultimo_dia = date("t", strtotime(date("1-".($i+1)."-".$x)));
+			for ($k = 0; $k < $ultimo_dia; $k++)
+			{
+				$semana_dia = date("w", strtotime(date(($k+1)."-".($i+1)."-".$x)));
+				$dias[($k+1)."&".$nome_semana[$semana_dia]."&".$semana_dia] = $k+1;
+				$calendario[$x][$nome_mes[$i]] = $dias;
+			}
+			unset($dias);
+		}
+	}
+	$freq_cliente 	= listar_cliente_freq($conn, $id_cliente);
+	if(!empty($freq_cliente))
+		$prod_cliente	= array_produtos($freq_cliente);
+	// CRIA O HTML DO CALENDARIO COM BASE NA ARRAY CRIADA ACIMA.
+	$id   	= 1;
+	$html 	= "";
+	$x		= 0;
+	foreach ($calendario as $chave_ano => $ano)
+	{
+		$html .= "<table id='ano-$chave_ano' >";
+		$html .= "	<tr>
+						<td>";
+		foreach ($ano as $chave_mes => $mes)
+		{
+			$html .= "	<table id='$chave_ano-$id' class='tabela-calendario $chave_mes'>";
+			$html .= "		<tr>
+								<th align='center' colspan='7' style='text-align: center;color: black!important;background: transparent!important;'>
+									<div style='height: 36px;display: flex;justify-content: space-around;align-items: center;'>
+										<button type='button' class='btn-voltar btn'>
+											<i class='fa fa-angle-double-left' style='height: 100%;display: block;'></i>
+										</button>
+										<h2 style='margin:0;ont-weight: 400;line-height: 32px;font-size: 2.5rem; text-transform: uppercase;display:inline;'>
+											$chave_mes de $chave_ano
+										</h2>
+										<button type='button' class='btn-proximo btn'>
+											<i class='fa fa-angle-double-right' style='height: 100%;display: block;'></i>
+										</button>
+									</div>
+								</th>
+							</tr>";
+			
+			$html .= "		<tr>
+								<th width='14.28%'>Domingo</th>
+								<th width='14.28%'>Segunda-Feira</th>
+								<th width='14.28%'>Terça-Feira</th>
+								<th width='14.28%'>Quarta-Feira</th>
+								<th width='14.28%'>Quinta-Feira</th>
+								<th width='14.28%'>Sexta-Feira</th>
+								<th width='14.28%'>Sabado</th>
+							<tr>";
+	
+			foreach ($mes as $chave_dia => $dia)
+			{
+				if(isset($freq_cliente[$x]['data']))
+					$exp = @explode("-", $freq_cliente[$x]['data']);
+				else
+					$exp = -1;
+				
+				if($chave_ano == $exp[0] && $chave_mes == $nome_mes[$exp[1]-1] && $dia == $exp[2])
+				{
+					$box_prod  = "";
+					$cor_fundo = "";
+					$y = 0;
+					foreach ($prod_cliente[$freq_cliente[$x]['data']] as $value)
+					{
+						if($value['id_tipo_acesso'] == 1)
+							$cor_fundo = "#ff0035";
+						else if($value['id_tipo_acesso'] == 2)
+							$cor_fundo = "#8b00ff";
+						else if($value['id_tipo_acesso'] == 3)
+							$cor_fundo = "#009688";
+						else
+							$cor_fundo = "#FF0000";
+
+						$box_prod .= "<p style='background: $cor_fundo; font-size: 12px;width: 20px;display: inline-block;text-align: center;margin: 0 2px;'>$value[qtd]</p>";
+						$y++;
+					}
+					$classe_freq = "box-freq-cli";
+					
+					if($y > 0)
+						$x = $x + $y;
+					else
+						$x++;
+				}
+				else
+				{
+					$y = 0;
+					$box_prod 	 = "";
+					$classe_freq = "";
+				}
+				
+				$exp_semana = @explode("&", $chave_dia);
+				$semana = $exp_semana[2];
+				
+				//cria tds vazias caso o dia primeiro não comece em um domingo, sendo assim o dia primeiro começa na td respectiva do dia da semana correta.
+				if($dia == 1 && $semana == 1)
+					$html .= criar_td($semana) . "<td class='$classe_freq' id='dia-$dia'>$dia <br>$box_prod</td>";
+				else if($dia == 1 && $semana == 2)
+					$html .= criar_td($semana) . "<td class='$classe_freq' id='dia-$dia'>$dia <br>$box_prod</td>";
+				else if($dia == 1 && $semana == 3)
+					$html .= criar_td($semana) . "<td class='$classe_freq' id='dia-$dia'>$dia <br>$box_prod</td>";
+				else if($dia == 1 && $semana == 4)
+					$html .= criar_td($semana) . "<td class='$classe_freq' id='dia-$dia'>$dia <br>$box_prod</td>";
+				else if($dia == 1 && $semana == 5)
+					$html .= criar_td($semana) . "<td class='$classe_freq' id='dia-$dia'>$dia <br>$box_prod</td>";
+				else if($dia == 1 && $semana == 6)
+					$html .= criar_td($semana) . "<td class='$classe_freq' id='dia-$dia'>$dia</td>";
+				else
+					$html .= "<td class='$classe_freq' id='dia-$dia'>$dia <br>$box_prod</td>";
+				
+				//Caso seja no final da semana(Sabado) ele fecha a tr e cria outra pra proxima linha.
+				if($semana == 6)
+					$html .= "</tr>";
+			}
+			$id++;
+			
+			$html .= "		</tr>";
+			$html .= "		</table>";
+		}
+		$id = 1;
+		$html .= "		</td>
+					  </tr>";
+		$html .= "	</table>";
+	}
+	
+	mysqli_close($conn);
+	return $html;
+}
+
+function array_produtos($ar)
+{
+	foreach ($ar as $key => $value)
+	{
+		$produtos[] = array("id_tipo_acesso" => $value['id_tipo_acesso'], "nome"=>$value['nome'], "qtd"=>$value['qtd_acesso']);
+		$itens_produtos[$value['data']] = $produtos;
+
+		if(isset($ar[$key+1]) && $ar[$key+1]['data'] != $value['data'])
+			unset($produtos);
+	}
+
+	return $itens_produtos;
+}
+
+function criar_td($semana)
+{
+	$tds = "";
+	for($i = 0; $i < $semana; $i++)
+		$tds .= "<td align='center' class='box-inativo'>25</td>";
+
+		return $tds;
 }

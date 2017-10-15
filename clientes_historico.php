@@ -32,7 +32,6 @@ switch ($action){
 		$historico_venda = listarHistoricoCliente($conn);
 		$total 		 	 = totalQtdVendaAcesso($conn);
 }
-
 $total_venda = number_format($total['total_venda'], 2, ',', '.');
 
 ?>
@@ -229,7 +228,7 @@ $(document).ready(function(){
 							$valor_venda = "R$ " . number_format($historico['valor_venda_acesso'], 2, ',', '.'); 
 						?>
 		              <tr>
-		                <td><?php echo $historico['nome_cliente']; ?></td>
+		                <td><?php echo !empty($historico['nome_cliente']) ? $historico['nome_cliente'] : "avulso"; ?></td>
 		                <td align="center"><?php echo $data_venda; ?></td>
 		                <td align="center"><?php echo $historico['nome_acesso']; ?></td>
 		                <td align="center"><?php echo $historico['qtde_acesso']; ?></td>
@@ -243,7 +242,7 @@ $(document).ready(function(){
 					
 		            ?>
 		            <tr>
-		            	<td colspan="6" align="center" style="color: #FF0000;font-weight: bold;">Nenhum hist�rico encontrado.</td>
+		            	<td colspan="6" align="center" style="color: #FF0000;font-weight: bold;">Nenhum histórico encontrado.</td>
 		            </tr>
 		            
 		            <?php 

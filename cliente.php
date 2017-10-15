@@ -40,10 +40,9 @@
 	
 	switch ($action){
 		case "salvar":
-			
 			// VALIDAÇÕES
 			//TODO: arrumar essa gambiarra;
-				
+			/*	
 			$celular = str_replace("(", "", $celular);
 			$celular = str_replace(")", "", $celular);
 			$celular = str_replace(" ", "", $celular);
@@ -66,10 +65,10 @@
 					header("location: cliente.php?acao=editar&id_cliente=$id_cliente&msg=$msg&erro=1");
 					die();
 				}
-			}
+			}*/
 			
 			
-			if($nome != "" && $email !== "" && $celular != "" && $origem != "" && $data_nasc != "")
+			if($nome != "" && $origem != "" && $sexo != "")
 			{
 				$data_formatada = date("Y-m-d", strtotime($data_nasc));
 				
@@ -115,7 +114,11 @@
 				$contato_tipo 	= $clientes[0]['ORIGEM'];
 				$sexo 			= $clientes[0]['SEXO'];
 				$data_nasc 		= $clientes[0]['DATA_ANIVERSARIO'];
-				$data_nasc 	= date("m/d/Y", strtotime($clientes[0]['DATA_ANIVERSARIO']));
+				
+				if(!empty($clientes[0]['DATA_ANIVERSARIO']))
+					$data_nasc 	= date("m/d/Y", strtotime($clientes[0]['DATA_ANIVERSARIO']));
+				else
+					$data_nasc  = NULL;
 			}
 			
 			
@@ -142,12 +145,16 @@
 $(document).ready(function(){
   //Money Euro
   $("[data-mask]").inputmask();
-  $("#datepicker").inputmask("mm/dd/yyyy");
+  $("#datepicker").inputmask("dd/mm/yyyy");
 
 	//Date picker
-  	$('#datepicker').datepicker({
-    	autoclose: true
-  	});
+  $('#datepicker').datepicker({
+      todayBtn: "linked",
+      language: "it",
+      autoclose: true,
+      todayHighlight: true,
+      format: 'dd/mm/yyyy' 
+  });
 
  	 $(".fecha-msg").click(function(){
 		var parent = $(this).parent();

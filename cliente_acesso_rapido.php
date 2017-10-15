@@ -9,7 +9,7 @@
 	$erro	  	  		= isset($_REQUEST['erro']) 				? $_REQUEST['erro'] 	 		: "";
 	$id_tipo_acesso 	= isset($_REQUEST['id_tipo_acesso']) 	? $_REQUEST['id_tipo_acesso'] 	: null;
 	$tipo_venda_baixa 	= isset($_REQUEST['tipo_venda_baixa']) 	? $_REQUEST['tipo_venda_baixa'] : null;
-	$qtd_acesso 		= isset($_REQUEST['qtd_acesso']) 		? $_REQUEST['qtd_acesso'] 		: "";
+	$qtd_acesso 		= isset($_REQUEST['qtd_acesso']) 		? $_REQUEST['qtd_acesso'] 		: 1;
 	
 	switch ($action)
 	{
@@ -17,87 +17,33 @@
 				
 			$id_cliente = isset($_REQUEST['id_cliente']) ? $_REQUEST['id_cliente'] : null;
 			
-			if($tipo_venda_baixa == "" || empty($id_tipo_acesso)|| empty($qtd_acesso))
+			if(empty($id_tipo_acesso))
 			{
-				$msg = "[AVISO] Por favor preencher todos os campos do cadastro!";
-				header("location: acesso_rapido.php?msg=$msg&erro=1");
+				$msg = "[AVISO] Por favor preencher o tipo de acesso!";
+				header("location: cliente_acesso_rapido.php?msg=$msg&erro=1");
 				die();
 			}
 				
-			if($qtd_acesso <= 0)
+			/*if($qtd_acesso <= 0)
 			{
 				$msg = "[AVISO] Quantidade de acesso deve ser maior que 0.";
-				header("location: acesso_rapido.php?msg=$msg&erro=1");
+				header("location: cliente_acesso_rapido.php?msg=$msg&erro=1");
 				die();
-			}
-			
+			}*/
 			//INSERE ACESSO
-			if($tipo_venda_baixa == 0)
-			{
-				$acesso = listaAcesso($conn, $id_cliente, $id_tipo_acesso);
-			
-				$qtd_acessos = ($acesso['total'] + $qtd_acesso) - $acesso['consumido'];
-			
-				if($qtd_acessos < 0)
-				{
-					$qtd_acessos = $qtd_acessos * -1;
-					$valor_total = retornar_pre�o_total_acesso($conn, $id_tipo_acesso, $qtd_acessos);
-						
-					replace_cliente_pendente($conn, $id_cliente, $id_tipo_acesso, $valor_total);
-				}
-				else
-				{
-					deleta_cliente_pendente($conn, $id_cliente);
-				}
-			
-				$tipo_acesso    = lista_tipo_acesso($conn, $id_tipo_acesso);
-				$retorno_insere = insereAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso, $qtd_acesso * $tipo_acesso[0]['valor_tipo_acesso']);
-			}
-			//BAIXA ACESSO
-			else if($tipo_venda_baixa == 1)
-			{
-				$acesso = listaAcesso($conn, $id_cliente, $id_tipo_acesso);
-			
-				//somo o baixa acesso atual + o total que sera inserido, conseguindo saber se havera diverg�ncia
-				$qtd_acessos = $acesso['total'] - ($acesso['consumido'] + $qtd_acesso);
-			
-				if($qtd_acessos < 0)
-				{
-					$qtd_acessos = $qtd_acessos * -1;
-					$valor_total = retornar_pre�o_total_acesso($conn, $id_tipo_acesso, $qtd_acessos);
-			
-					replace_cliente_pendente($conn, $id_cliente, $id_tipo_acesso, $valor_total);
-				}
-			
-				$retorno_baixa = baixaAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso);
-			}
+			$tipo_acesso    = lista_tipo_acesso($conn, $id_tipo_acesso);
+			$retorno_insere = insereAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso, ($qtd_acesso * $tipo_acesso[0]['valor_tipo_acesso'] + $valor_taxa), 0);
+			$retorno_baixa  = baixaAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso);
 		
-			if(isset($retorno_insere) && $retorno_insere != false)
+			if($retorno_insere != false && $retorno_baixa != false)
 			{
-				if(!empty($paginacao))
-					header("location: acesso_rapido.php?msg=Acesso inserido com sucesso!&" . $paginacao);
-					else
-						header("location: acesso_rapido.php?msg=Acesso inserido com sucesso!");
-		
-						exit();
-			}
-			else if(isset($retorno_baixa) && $retorno_baixa != false)
-			{
-				if(!empty($paginacao))
-					header("location: acesso_rapido.php?msg=[AVISO] Baixa no acesso com sucesso!&" . $paginacao);
-					else
-						header("location: acesso_rapido.php?msg=Baixa no acesso com sucesso!");
-		
-						exit();
+				header("location: cliente_acesso_rapido.php?msg=Baixa no acesso com sucesso!");
+				exit();
 			}
 			else
 			{
-				if(!empty($paginacao))
-					header("location: acesso_rapido.php?msg=[AVISO] Erro ao inserir/baixar o acesso!&erro=1&" . $pagi);
-					else
-						header("location: acesso_rapido.php?msg=[AVISO]Erro ao inserir/baixar o acesso!&erro=1");
-							
-						exit();
+				header("location: cliente_acesso_rapido.php?msg=[AVISO]Erro ao inserir/baixar o acesso!&erro=1");
+				exit();
 			}
 		
 			break;
@@ -139,7 +85,7 @@
 	$topFrequencias = buscarTopFrequencia($conn, $ids_cliente, $inicio, $dataHoje);
 	//Concatena todos os ids;
 	$ids_cliente = concatenar($topFrequencias);
-	$nãoFrequencias = buscarNaoFrequencia($conn, $ids_cliente);
+	$frequencias = buscarFrequencias($conn);
 	$tipos_acesso = lista_tipo_acesso($conn);
 ?>
 <style>
@@ -171,29 +117,66 @@
 
 <script>
 
-	$(document).ready(function(){
-		$(".small-box").click(function(){
-
-			//Seta o id do cliente no input type='hidden'.
-			$("#cliente").attr("value", $(this).data("cliente"));
-		});
-
-		$(".bota_add_acesso").click(function(){
-			var qtd_botao = $(this).val();
-			var qtd_input = parseInt($(".input-qtd-acesso").val()) || 0;
-
-			var total = parseInt(qtd_botao) + parseInt(qtd_input);
-			//SETO OS VALORES NO INPUT DOS ACESSO
-			$(".input-qtd-acesso").val(total);
-		});
+$(document).ready(function(){
+	$("[data-mask]").inputmask();
+	
+	$(".fecha-msg").click(function(){
+		var parent = $(this).parent();
+		parent.css("display", "none");
 	});
+	
+	$(document).on("click", ".small-box", function(){
+		//Seta o id do cliente no input type='hidden'.
+		$("#cliente").attr("value", $(this).data("cliente"));
+	});
+
+	$(".bota_add_acesso").click(function(){
+		var qtd_botao = $(this).val();
+		var qtd_input = parseInt($(".input-qtd-acesso").val()) || 0;
+
+		var total = parseInt(qtd_botao) + parseInt(qtd_input);
+		//SETO OS VALORES NO INPUT DOS ACESSO
+		$(".input-qtd-acesso").val(total);
+	});
+	
+	$("#campo_nome").keyup(function(){
+		buscaEscreveCliente($(this).val(), $("#campo_cel").val());
+	});
+	
+	$("#campo_cel").keyup(function(){
+		buscaEscreveCliente($("#campo_nome").val(), $(this).val());
+	});
+});
+
+function buscaEscreveCliente(nome, celular)
+{
+	var retirar = ["(", ")", "_", "-", " "];
+	for(var i=0;i<retirar.length;i++) {
+		celular = celular.replace(retirar[i],"");
+	}
+	
+	$.ajax
+	({
+		url: "ajax_busca_cliente.php",
+		data: {nome: nome,celular: celular},
+		dataType: 'html',
+		cache: false,
+		success: function(r)
+		{
+			$(".box-footer").children(".box_cliente div").remove();
+			$(r).appendTo(".box_cliente");
+			//console.log(r);
+		}
+	});
+}
+
 </script>
 
 <!-- Modal inserir Acesso r�pido -->
 	<div class="modal  modal-default fade in" id="acesso_rapido" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
 	  <div class="modal-dialog" role="document" style="width: 20%">
 	    <div class="modal-content">
-	     <form action="acesso_rapido.php" method="post">
+	     <form action="cliente_acesso_rapido.php" method="post">
 	     <input type="hidden" name="id_cliente" id="cliente">
 	      <div class="modal-header">
 	        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -202,15 +185,15 @@
 	      	<div class="modal-body">
 		      	<div class="box-body">
 	      			<div class="row">
-	      				<div class="form-group col-xs-12">
+	      				<!--div class="form-group col-xs-12">
 	                  		<!-- <label>Quantidade:</label> -->
-	                  		<input class="form-control verifica input-qtd-acesso" type="text" name="qtd_acesso" value="0"
+	                  		<!--input class="form-control verifica input-qtd-acesso" type="text" name="qtd_acesso" value="0"
 	                  			style="border: none;font-size: 45px;padding: 5px 0;margin-bottom: 30px;" />
 	                  			
 	                  		<button type="button" class="col-lg-4 col-xs-4 col-sm-4 bota_add_acesso" value="1">+1</button>
 	                  		<button type="button" class="col-lg-4 col-xs-4 col-sm-4 bota_add_acesso" value="3">+3</button>
 	                  		<button type="button" class="col-lg-4 col-xs-4 col-sm-4 bota_add_acesso" value="5">+5</button>
-	                  	</div>
+	                  	</div-->
 	                  	
 		                <div class="form-group col-xs-12">
 		                  <label>Tipo de acesso:</label>
@@ -233,7 +216,7 @@
 		              	</select>
 		                </div>
 		                
-		                <div class="form-group col-xs-12">
+		                <!--div class="form-group col-xs-12">
 		                	<label>
 			                  Acesso
 			                </label>
@@ -245,7 +228,7 @@
 			                  	<input type="radio" name="tipo_venda_baixa" value="1" class="minimal verifica" style="width:20px;height:20px;margin-left: 20px;">
 		                  		Consumo
 		                	</div>
-	              		</div>
+	              		</div-->
 	      				<!-- <div class="form-group col-xs-12" style="margin-bottom: 20px;">
 		                  	<input type="radio" name="tipo_venda_baixa" value="0" class="minimal verifica" style="width:20px;height:20px;">
 			                Compra
@@ -283,7 +266,7 @@
 <section class="content-header">
   <h1>
     Acesso Rápido
-    <small class="text-small-content-header">Frequências semanais do dia <span style="color: #4a4a4a;font-weight:bold;"><?php echo "$dias_semana[$dia_inicio] ($inicioSemana) à $dias_semana[$dia_final] ($atualSemana)"?></span></small>
+    <small class="text-small-content-header">Maiores frêquencias </small>
   </h1>
 </section>
 
@@ -302,11 +285,45 @@
 	<div class="row">
 	    <div class="col-xs-12">
 	        <div class="box box-danger" style="padding-top:15px;">
-		        <?php 
-				if(is_array($topFrequencias) && count($topFrequencias) > 0)
+	        	<div class="box-header with-border">
+           			<h3 class="box-title">Buscar Cliente</h3>
+        		</div>
+	        	<div class="box-body" style="padding-bottom: 0!important;">
+			          <!-- Date dd/mm/yyyy -->
+			          <div class="form-group col-md-4 col-sm-6 col-xs-12">
+			            <label>Nome:</label>
+			            <div class="input-group" style="width: 100%;">
+			              <input type="text" name="nome" class="form-control" id="campo_nome">
+			            </div>
+			            <!-- /.input group -->
+			          </div>
+			          <!-- /.form group -->
+			
+			          <!-- phone mask -->
+			          <div class="form-group col-md-4 col-sm-6 col-xs-12">
+			            <label>Celular:</label>
+			
+			            <div class="input-group" style="width: 100%;">
+			              <input type="text" name="celular" class="form-control"  data-inputmask='"mask": "(99) 99999-9999"' id="campo_cel" data-mask>
+			            </div>
+			          </div><!-- /.form-group-->
+    			</div>
+    			<div class="box-footer box_cliente">
+    				<div class='col-lg-4 col-xs-12 col-sm-6'>
+						<div data-toggle='modal' data-target='#acesso_rapido' class='small-box bg-aqua' data-cliente='0' style='background:rgba(0,0,0,0.20)!important'>
+							<div class='inner' style='max-width: 70%;'>
+								<h4 style="color:aliceblue;font-weight:bold;text-shadow: -1px 0 #8c8c8c, 0 1px #8c8c8c, 1px 0 #8c8c8c, 0 -1px #8c8c8c;">SEM CADASTRO</h4>
+							</div>
+							<div class='box-img'>
+								<img src='img/avatares/neutro.png'>
+							</div>
+						</div>
+					</div>
+		        <?php
+				if(is_array($frequencias) && count($frequencias) > 0)
 				{
 					$i = 0;
-					foreach ($topFrequencias as $topFrequencia)
+					foreach ($frequencias as $topFrequencia)
 					{
 						//Busca os avatares masculinos, senão busca os feminino
 						$imagem = buscarAvatar($topFrequencia['sexo']);
@@ -332,30 +349,8 @@
 						$i++;
 					}
 				}
-				
-				if(is_array($nãoFrequencias) && count($nãoFrequencias) > 0)
-				{
-					$i = 0;
-					foreach ($nãoFrequencias as $nãoFrequencia)
-					{
-						//Busca os avatares masculinos, senão busca os feminino
-						$imagem = buscarAvatar($nãoFrequencia['sexo']);
-							
-						echo "	<div class='col-lg-4 col-xs-12 col-sm-6'>
-								<div data-toggle='modal' class='small-box bg-aqua' data-cliente='$nãoFrequencia[id_cliente]' style='background: #d4d4d4!important;cursor: auto;'>
-								<div class='inner' style='max-width: 70%;'>
-								<h4>$nãoFrequencia[nome]</h4>
-								</div>
-								<div class='box-img' style='opacity: 0.5;'>
-								<img src='img/avatares/$imagem'>
-								</div>
-								</div>
-								</div>";
-									
-								$i++;
-					}
-				}
-			?>
+				?>
+				</div>
 	        </div>
 	    </div>
 	</div>

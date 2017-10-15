@@ -5,8 +5,8 @@
 	require_once('function/cliente.php');
 	
 	$id_cliente = isset($_REQUEST['id_cliente']) ? $_REQUEST['id_cliente'] : 0;
-	$clientes = listaCliente($conn, $id_cliente);
 
+	$clientes = listaCliente($conn, $id_cliente);
 	if(is_array($clientes) && count($clientes) > 0)//Cliente existe
 	{
 		$shakes 	= listaAcesso($conn, $id_cliente, 1);//Consumo Shake;
