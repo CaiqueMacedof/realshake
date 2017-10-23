@@ -14,7 +14,9 @@ $periodo_historico 	= isset($_REQUEST['periodo_historico']) 	? $_REQUEST['period
 
 
 //Lista do banco os tipo de contato. EXEMPLO: indicacao, facebook ...
-$tipo_contatos = lista_tipo_contato($conn);
+$tipo_contatos 	 = lista_tipo_contato($conn);
+
+$historico_baixa = listarHistoricoClienteBaixa($conn);
 
 switch ($action){
 	case 'filtrar':
@@ -23,16 +25,29 @@ switch ($action){
 		$data_inicial 	= date("Y-m-d", strtotime(str_replace("/", "-", $periodo[0]))) . " 00:00:00";
 		$data_final	 	= date("Y-m-d", strtotime(str_replace("/", "-", $periodo[1]))) . " 23:59:59";
 
-		$historico_venda = listarHistoricoCliente($conn, false, $nome, $data_inicial, $data_final);
-		$total 		 	 = totalQtdVendaAcesso($conn, $nome, $data_inicial, $data_final);
+		$historico_baixa = listarHistoricoClienteBaixa($conn, false, $nome, $data_inicial, $data_final);
 
 		break;
-
-	default:
-		$historico_venda = listarHistoricoCliente($conn);
-		$total 		 	 = totalQtdVendaAcesso($conn);
+	case 'deletar':
+		$id_baixa_acesso = isset($_REQUEST['id_baixa_acesso']) ? $_REQUEST['id_baixa_acesso'] : null;
+		if(!empty($id_baixa_acesso))
+		{
+			$retorno = deletaBaixaAcesso($conn, $id_baixa_acesso);
+			if($retorno != false)
+			{
+				$msg = "[AVISO] Baixa de acesso deletado com sucesso!";
+				header("location: cliente_baixa_acesso.php?msg=$msg");
+				die();
+			}
+			else
+			{
+				$msg = "[AVISO] Falha ao deletar a baixa de acesso!";
+				header("location: cliente_baixa_acesso.php?msg=$msg&erro=1");
+				die();
+			}
+		}
+		break;
 }
-$total_venda = number_format($total['total_venda'], 2, ',', '.');
 ?>
 <script>
 
@@ -135,10 +150,21 @@ $(document).ready(function(){
 	  startDate: '01/' + mes_atual + '/2017',
 	  endDate: dia_atual + '/' + mes_atual + '/2017'
   });
+  
+	$(".deletar-acesso").click(function(){
+		var id = $(this).data("id");
+		$("#deleta_baixa_acesso").attr("value", id);
+	});
 
 });
 </script>
-
+<style>
+	table tr td .fa
+	{
+		cursor: pointer;
+		font-size: 22px;
+	}
+</style>
 <!-- Content Header (Page header) -->
 <section class="content-header">
   <h1>
@@ -147,8 +173,41 @@ $(document).ready(function(){
   </h1>
 </section>
 
+<!-- Modal ALERTA -->
+<div class="modal  modal-danger fade in" id="alerta" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog modal-dispositivo" role="document">
+    <div class="modal-content">
+     <form action="cliente_baixa_acesso.php" method="post">
+     <input type="hidden" name="id_baixa_acesso" id="deleta_baixa_acesso">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Alerta!</h4>
+      </div>
+      <div class="modal-body">
+        Você realmente deseja deletar essa baixa de acesso?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-dismiss="modal">Fechar</button>
+        <button type="submit" class="btn btn-success" name="acao" value="deletar">Prosseguir</button>
+      </div>
+     </form>
+    </div>
+  </div>
+</div>
+	
 <!-- Main content -->
 <section class="content">
+<?php 	
+	if(!empty($msg))
+	{
+		$nomeClasse = ($erro == 0) ? "success" : "danger";
+			
+		echo "<div class='callout callout-$nomeClasse' style='position: relative;'>";
+		echo 	"<h4 style='font-weight: normal;'>$msg</h4>";
+		echo 	"<span class='fecha-msg'>X</span>";
+		echo "</div>";
+	}	
+?>
   <div class="row">
     <div class="col-xs-12">
         <div class="box box-danger">
@@ -156,7 +215,7 @@ $(document).ready(function(){
            <h3 class="box-title">Busca</h3>
         </div>
         
-        <form action="clientes_historico.php" method="post">
+        <form action="cliente_baixa_acesso.php" method="post">
 	        <div class="box-body">
 	          <!-- Date dd/mm/yyyy -->
 	          <div class="form-group col-lg-4 col-xs-12 col-sm-6">
@@ -212,26 +271,28 @@ $(document).ready(function(){
                 <th style="text-align:center;">Data</th>
                 <th style="text-align:center;">Tipo de Acesso</th>
                 <th style="text-align:center;">Quantidade</th>
-                <th style="text-align:center;">Valor</th>
+                <th style="text-align:center;">Excluir</th>
               </tr>
             
             </thead>
             
             <tbody>
 		            <?php
-					if(is_array($historico_venda) && count($historico_venda) > 0)
+					if(is_array($historico_baixa) && count($historico_baixa) > 0)
 					{
-						foreach ($historico_venda as $historico)
+						foreach ($historico_baixa as $historico)
 						{
-							$data_venda  = date("d/m/Y - H:i:s", strtotime($historico['data_venda']));
-							$valor_venda = "R$ " . number_format($historico['valor_venda_acesso'], 2, ',', '.'); 
+							$data_venda  = date("d/m/Y - H:i:s", strtotime($historico['data_baixa']));
 						?>
 		              <tr>
 		                <td><?php echo !empty($historico['nome_cliente']) ? $historico['nome_cliente'] : "avulso"; ?></td>
 		                <td align="center"><?php echo $data_venda; ?></td>
 		                <td align="center"><?php echo $historico['nome_acesso']; ?></td>
 		                <td align="center"><?php echo $historico['qtde_acesso']; ?></td>
-		                <td align="right"><?php echo $valor_venda; ?></td>
+		                <td align="center">
+		                	<i class="fa fa-times deletar-acesso" style="color: red;" aria-hidden="true"  data-toggle="modal" data-target="#alerta" 
+		                		data-id="<?php echo $historico['id_baixa_acesso']; ?>"></i>
+                		</td>
 		              </tr>
 		            <?php 
 						}
@@ -247,15 +308,6 @@ $(document).ready(function(){
 		            <?php 
 					}
 		            ?>
-            </tbody>
-            <tbody style="border-top: none;">
-	            <tr>
-	            	<th colspan="4" style="text-align:right;">Total</th>
-	            	<th colspan="4" style="text-align:right;color: #2cb03c;">
-	            	  	<i class="fa fa-usd"></i>
-	            		<?php echo $total_venda; ?>
-	            	</th>
-	            </tr>
             </tbody>
           </table>
         </div>

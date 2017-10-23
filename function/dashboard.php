@@ -79,7 +79,7 @@ function quantidade_origem_cliente($conn)
 
 function quantidade_cliente($conn)
 {
-	$query = "	SELECT COUNT(*) as total_cliente FROM cliente";
+	$query = "	SELECT COUNT(*) as total_cliente FROM cliente WHERE id_cliente != 1";
 
 	$resultado = mysqli_query($conn, $query);
 

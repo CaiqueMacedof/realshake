@@ -1,5 +1,4 @@
 <?php
-	
 	require_once("function/conexao.php");
 	require_once("function/mysqli_fetch_all_mod.php");
 	

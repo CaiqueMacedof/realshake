@@ -101,46 +101,16 @@ function atualizaCliente($conn, $id_cliente, $nome, $email, $celular, $data_nasc
 }
 
 
-function deletaCliente($conn, $id_cliente)
+function deletaBaixaAcesso($conn, $id_baixa_acesso)
 {
-	$query = sprintf("	DELETE FROM venda_acesso
-						WHERE id_cliente = %d", mysqli_real_escape_string($conn, $id_cliente));
+	$query = sprintf("DELETE FROM baixa_acesso
+						WHERE id_baixa_acesso = %d", mysqli_real_escape_string($conn, $id_baixa_acesso));
 	
-	$result = mysqli_query($conn, $query);
-	
-	if($result != false)
-	{
-		$query = sprintf("	DELETE FROM baixa_acesso
-							WHERE id_cliente = %d", mysqli_real_escape_string($conn, $id_cliente));
-		
-		$result = mysqli_query($conn, $query);
-		
-		if($result != false)
-		{
-			$query = sprintf("	DELETE FROM cliente
-								WHERE id_cliente = %d", mysqli_real_escape_string($conn, $id_cliente));
-			
-			$result = mysqli_query($conn, $query);
-			
-			if($result != false)
-			{
-				return $result;
-			}
-			else
-			{
-				return false;
-			}
-		}
-		else
-		{
-			return false;
-		}
-	}
+	$resultado = mysqli_query($conn, $query);
+	if($resultado != false)
+		return true;
 	else
-	{
 		return false;
-	}
-	
 }
 
 function insereAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso, $total_venda_acesso, $tipo_pagamento)
@@ -248,10 +218,10 @@ function listarHistoricoCliente($conn, $agrupar = FALSE, $nome = FALSE, $dataHor
 						    valor_venda_acesso
 						    
 						FROM venda_acesso as va
-						LEFT JOIN cliente as cli
-						on va.id_cliente = cli.id_cliente
-						LEFT JOIN tipo_acesso as ta
-						on va.id_tipo_acesso = ta.id_tipo_acesso
+							LEFT JOIN cliente as cli
+							on va.id_cliente = cli.id_cliente
+							LEFT JOIN tipo_acesso as ta
+							on va.id_tipo_acesso = ta.id_tipo_acesso
 					 	
 						where 1 = 1"
 					);
@@ -272,7 +242,52 @@ function listarHistoricoCliente($conn, $agrupar = FALSE, $nome = FALSE, $dataHor
 		$query .= " " . $agrupar;	
 	}
 	//echo $query;die;
-	$query .= " ORDER BY va.data_venda";
+	$query .= " ORDER BY va.data_venda DESC";
+	
+	$resultado = mysqli_query($conn, $query);
+	if($resultado != false)
+	{
+		return mysqli_fetch_all_mod($resultado);
+	}
+	else
+		return false;
+}
+
+
+function listarHistoricoClienteBaixa($conn, $agrupar = FALSE, $nome = FALSE, $dataHora_inicio = FALSE, $dataHora_final = FALSE)
+{
+	$query = sprintf("	SELECT 
+							ba.id_baixa_acesso,
+							cli.nome  as nome_cliente,
+						    ba.data_hora_baixa_acesso  as data_baixa,
+						    ta.nome as nome_acesso,
+						    qtde_acesso
+						    
+						FROM baixa_acesso as ba
+							LEFT JOIN cliente as cli
+							on ba.id_cliente = cli.id_cliente
+							LEFT JOIN tipo_acesso as ta
+							on ba.id_tipo_acesso = ta.id_tipo_acesso
+					 	
+						where 1 = 1"
+					);
+	
+	if($nome != FALSE)
+	{
+		$query .= " and cli.nome like '%" . mysqli_real_escape_string($conn, $nome)."%'";
+	}
+	
+	if($dataHora_inicio != FALSE && $dataHora_final != FALSE)
+	{
+		$query .= " and ba.data_hora_baixa_acesso between
+				'" . $dataHora_inicio . "' and '" . $dataHora_final . "'";
+	}
+	
+	if($agrupar != FALSE)
+	{
+		$query .= " " . $agrupar;
+	}
+	$query .= " ORDER BY data_baixa DESC";
 	
 	$resultado = mysqli_query($conn, $query);
 	if($resultado != false)
@@ -369,8 +384,8 @@ function buscarFrequencias($conn, $nome=null, $celular=null)
 					cli.ID_CLIENTE,
 					cli.nome,
 					cli.sexo,
-					SUM(ba.qtde_acesso) AS total_frequencia
-				FROM real_shake.baixa_acesso AS ba
+					count(*) AS total_frequencia
+				FROM baixa_acesso AS ba
 				INNER JOIN cliente AS cli ON ba.ID_CLIENTE = cli.id_cliente
 				WHERE 1=1";
 
@@ -433,11 +448,12 @@ function replace_cliente_pendente($conn, $id_cliente, $id_tipo_acesso, $valor_to
 	
 }
 
-function deleta_cliente_pendente($conn, $id_cliente)
+function deleta_cliente_pendente($conn, $id_cliente, $tipo_acesso)
 {
-	$query = sprintf("DELETE FROM cliente_pendente WHERE id_cliente = %d",
+	$query = sprintf("DELETE FROM cliente_pendente WHERE id_cliente = %d AND id_tipo_acesso = %d",
 	
-			mysqli_real_escape_string($conn, $id_cliente));
+			mysqli_real_escape_string($conn, $id_cliente),
+			mysqli_real_escape_string($conn, $tipo_acesso));
 	
 	$result = mysqli_query($conn, $query);
 	if($result)
@@ -491,6 +507,17 @@ function total_pendente($conn)
 	{
 		return false;
 	}
+}
+
+function lista_pendente($conn)
+{
+	$query  = "SELECT cli.nome, ta.nome as tipo_acesso, cp.valor_total as total_pendentes FROM cliente_pendente as cp LEFT JOIN cliente as cli ON cp.id_cliente = cli.id_cliente LEFT JOIN tipo_acesso ta ON cp.id_tipo_acesso = ta.id_tipo_acesso";
+	
+	$resultado = mysqli_query($conn, $query);
+	if($resultado !== false)
+		return mysqli_fetch_all_mod($resultado, MYSQL_BOTH);
+	else
+		return false;
 }
 
 function listar_pendente_cliente($conn, $id_cliente)
@@ -608,14 +635,14 @@ function gerar_calendario($conn, $id_cliente, $ano_inical, $ano_final)
 					$y = 0;
 					foreach ($prod_cliente[$freq_cliente[$x]['data']] as $value)
 					{
-						if($value['id_tipo_acesso'] == 1)
+						if($value['id_tipo_acesso'] == 1)//SHAKE
 							$cor_fundo = "#ff0035";
-						else if($value['id_tipo_acesso'] == 2)
+						else if($value['id_tipo_acesso'] == 2)//SOPA
 							$cor_fundo = "#8b00ff";
-						else if($value['id_tipo_acesso'] == 3)
+						else if($value['id_tipo_acesso'] == 3)//NUTRISOUP
 							$cor_fundo = "#009688";
 						else
-							$cor_fundo = "#FF0000";
+							$cor_fundo = "#FFF";
 
 						$box_prod .= "<p style='background: $cor_fundo; font-size: 12px;width: 20px;display: inline-block;text-align: center;margin: 0 2px;'>$value[qtd]</p>";
 						$y++;

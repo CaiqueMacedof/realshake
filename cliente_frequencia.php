@@ -3,7 +3,7 @@ require_once("header.php");
 require_once("function/cliente.php");
 
 $id_cliente = isset($_REQUEST['id']) ? $_REQUEST['id'] : header("location: clientes.php");
-
+$cliente	= listaCliente($conn, $id_cliente);
 ?>
 
 <style>
@@ -11,7 +11,7 @@ $id_cliente = isset($_REQUEST['id']) ? $_REQUEST['id'] : header("location: clien
 	.tabela-calendario
 	{
 		width: 100%;
-		height: 798px;
+		height: 710px;
 		border-collapse: collapse;
 	    background: white;
 	    position: absolute;
@@ -36,7 +36,7 @@ $id_cliente = isset($_REQUEST['id']) ? $_REQUEST['id'] : header("location: clien
 	
 	.tabela-calendario tr th
 	{
-		padding: 0 12px;
+		padding: 6px 12px;
 		font-size: 16px;
 		color: #b3b1b1!important;
 	}
@@ -53,7 +53,7 @@ $id_cliente = isset($_REQUEST['id']) ? $_REQUEST['id'] : header("location: clien
 	    background: rgb(234, 234, 234);
 	    min-width: 88px;
 	    text-align: center;
-	    box-shadow: 0 2px 5px 0 rgba(0,0,0,0.26);
+	    box-shadow: 0 3px 4px 0 rgba(0,0,0,0.26);
 	}
 	
 	.box-freq-cli
@@ -94,10 +94,11 @@ $id_cliente = isset($_REQUEST['id']) ? $_REQUEST['id'] : header("location: clien
 	
 	div.box-info-calendar > p
 	{
-		display: block;
-		color: white;
-		margin: 5px;
-		padding: 0 4px;
+	    display: block;
+	    color: white;
+	    margin: 5px;
+	    padding: 1px 4px;
+	    height: 22px;;
 	}
 </style>
 
@@ -153,9 +154,10 @@ $(document).ready(function(){
 <div class="row" style="background:white;">
     <div class="col-xs-12">
 		<div class="box-info-calendar">
-			<p style="background: #ff0035;">SOPA</p>
-			<p style="background: #8b00ff;">SHAKE</p>
+			<p style="background: #ff0035;">SHAKE</p>
+			<p style="background: #8b00ff;">SOPA</p>
 			<p style="background: #009688;">NUTRISOUP</p>
+			<p style="color: #5a5a5a;font-size: 18px;font-weight: 600;padding:0;">Cliente: <?php echo isset($cliente[0]['NOME']) ? $cliente[0]['NOME'] : ""; ?></p>
 		</div>
 		<?php echo gerar_calendario($conn,$id_cliente, 2015, 2017);?>
 	</div>

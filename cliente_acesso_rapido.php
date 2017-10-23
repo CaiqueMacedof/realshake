@@ -10,6 +10,7 @@
 	$id_tipo_acesso 	= isset($_REQUEST['id_tipo_acesso']) 	? $_REQUEST['id_tipo_acesso'] 	: null;
 	$tipo_venda_baixa 	= isset($_REQUEST['tipo_venda_baixa']) 	? $_REQUEST['tipo_venda_baixa'] : null;
 	$qtd_acesso 		= isset($_REQUEST['qtd_acesso']) 		? $_REQUEST['qtd_acesso'] 		: 1;
+	$tipo_pagamento 	= isset($_REQUEST['tipo_pagamento']) 	? $_REQUEST['tipo_pagamento'] 	: 0;
 	
 	switch ($action)
 	{
@@ -30,21 +31,21 @@
 				header("location: cliente_acesso_rapido.php?msg=$msg&erro=1");
 				die();
 			}*/
-			//INSERE ACESSO
+			
 			$tipo_acesso    = lista_tipo_acesso($conn, $id_tipo_acesso);
-			$retorno_insere = insereAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso, ($qtd_acesso * $tipo_acesso[0]['valor_tipo_acesso'] + $valor_taxa), 0);
-			$retorno_baixa  = baixaAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso);
-		
-			if($retorno_insere != false && $retorno_baixa != false)
+			//CLIENTE AVULSO
+			if($id_cliente == 1)
 			{
-				header("location: cliente_acesso_rapido.php?msg=Baixa no acesso com sucesso!");
-				exit();
+				insereAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso, ($qtd_acesso * $tipo_acesso[0]['valor_tipo_acesso'] + $valor_taxa), $tipo_pagamento);
+				baixaAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso);
 			}
 			else
 			{
-				header("location: cliente_acesso_rapido.php?msg=[AVISO]Erro ao inserir/baixar o acesso!&erro=1");
-				exit();
+				baixaAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso);
 			}
+		
+			header("location: cliente_acesso_rapido.php?msg=Baixa no acesso com sucesso!");
+			exit();
 		
 			break;
 		
@@ -146,6 +147,14 @@ $(document).ready(function(){
 	$("#campo_cel").keyup(function(){
 		buscaEscreveCliente($("#campo_nome").val(), $(this).val());
 	});
+	
+	$(".box-clientes").click(function(){
+		console.log($(this).data("cliente"));
+		if($(this).data("cliente") == "1")
+			$(".tipo_pagamento").show();
+		else
+			$(".tipo_pagamento").hide();
+	});
 });
 
 function buscaEscreveCliente(nome, celular)
@@ -196,9 +205,8 @@ function buscaEscreveCliente(nome, celular)
 	                  	</div-->
 	                  	
 		                <div class="form-group col-xs-12">
-		                  <label>Tipo de acesso:</label>
 		                  <select class="tipo_acesso form-control select2 verifica" name="id_tipo_acesso" style="width: 100%;">
-		                  	<option></option>
+		                  	<option>Tipo de acesso</option>
 							<?php 
 								if(is_array($tipos_acesso) && count($tipos_acesso) > 0)
 								{
@@ -215,6 +223,15 @@ function buscaEscreveCliente(nome, celular)
 							?>
 		              	</select>
 		                </div>
+		                
+		                <div class="form-group col-xs-12 tipo_pagamento" style="display: none">
+		                  	<select class="tipo_pagamento form-control" name="tipo_pagamento" style="width: 100%;">
+			                  	<option>Formas de Pagamento</option>
+			                  	<option value="1">Cartão de Débito/Dinheiro</option>
+			                  	<!--option value="2">Cartão de Crédito</option>
+			                  	<option value="3">Vale Refeição/Alimentação</option-->
+		              		</select>
+	                	</div>
 		                
 		                <!--div class="form-group col-xs-12">
 		                	<label>
@@ -310,9 +327,9 @@ function buscaEscreveCliente(nome, celular)
     			</div>
     			<div class="box-footer box_cliente">
     				<div class='col-lg-4 col-xs-12 col-sm-6'>
-						<div data-toggle='modal' data-target='#acesso_rapido' class='small-box bg-aqua' data-cliente='0' style='background:rgba(0,0,0,0.20)!important'>
+						<div data-toggle='modal' data-target='#acesso_rapido' class='small-box bg-aqua box-clientes' data-cliente='1' style='background:rgba(0,0,0,0.20)!important'>
 							<div class='inner' style='max-width: 70%;'>
-								<h4 style="color:aliceblue;font-weight:bold;text-shadow: -1px 0 #8c8c8c, 0 1px #8c8c8c, 1px 0 #8c8c8c, 0 -1px #8c8c8c;">SEM CADASTRO</h4>
+								<h4 style="color:aliceblue;font-weight:bold;text-shadow: -1px 0 #8c8c8c, 0 1px #8c8c8c, 1px 0 #8c8c8c, 0 -1px #8c8c8c;">AVULSO</h4>
 							</div>
 							<div class='box-img'>
 								<img src='img/avatares/neutro.png'>
@@ -325,6 +342,8 @@ function buscaEscreveCliente(nome, celular)
 					$i = 0;
 					foreach ($frequencias as $topFrequencia)
 					{
+						if($topFrequencia['ID_CLIENTE'] == 1)
+							continue;
 						//Busca os avatares masculinos, senão busca os feminino
 						$imagem = buscarAvatar($topFrequencia['sexo']);
 						//Busca as cores
@@ -336,7 +355,7 @@ function buscaEscreveCliente(nome, celular)
 							$texto = $topFrequencia['total_frequencia'] . " Frequências";
 						
 						echo "	<div class='col-lg-4 col-xs-12 col-sm-6'>
-									<div data-toggle='modal' data-target='#acesso_rapido' class='small-box bg-aqua' data-cliente='$topFrequencia[ID_CLIENTE]' style='background: $cor!important'>
+									<div data-toggle='modal' data-target='#acesso_rapido' class='small-box bg-aqua box-clientes' data-cliente='$topFrequencia[ID_CLIENTE]' style='background: $cor!important'>
 										<div class='inner' style='max-width: 70%;'>
 											<h4>$topFrequencia[nome]</h4>
 											<p>$texto</p>

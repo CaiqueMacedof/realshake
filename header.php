@@ -147,11 +147,11 @@ function checkTime(i){
 
       <!-- Sidebar Menu -->
       <ul class="sidebar-menu">
-      	<li><div id="relogio"></div></li>
+      	<li class="header" style="padding: 0px;"><div id="relogio"></div></li>
         <li class="header">Menu de Navegação</li>
         
     	<li id="1" class="treeview">
-          <a href="index.php"><i class="fa fa-area-chart"></i> <span>Dashboard</span></a>
+          <a href="index.php"><i class="fa fa-area-chart"></i> <span>Home</span></a>
            
         </li>
     
@@ -164,7 +164,8 @@ function checkTime(i){
           <ul class="treeview-menu">
             <li id="2-2"><a href="clientes.php">Clientes</a></li>
             <li id="2-3"><a href="cliente_acesso_rapido.php">Acesso rápido</a></li>
-            <li id="2-4"><a href="clientes_historico.php">Histórico de Compra</a></li>
+            <li id="2-4"><a href="cliente_baixa_acesso.php">Histórico Baixa de Acesso</a></li>
+            <li id="2-5"><a href="clientes_historico.php">Histórico Compra de Acesso</a></li>
           </ul>
         </li>
     	
