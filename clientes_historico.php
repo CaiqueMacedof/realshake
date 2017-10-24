@@ -26,6 +26,41 @@ switch ($action){
 		$historico_venda = listarHistoricoCliente($conn, false, $nome, $data_inicial, $data_final);
 		$total 		 	 = totalQtdVendaAcesso($conn, $nome, $data_inicial, $data_final);
 
+	case 'deletar':
+		$id_venda_acesso = isset($_REQUEST['id_venda_acesso']) ? $_REQUEST['id_venda_acesso'] : null;
+		if(!empty($id_venda_acesso))
+		{
+			$exp_valor 	= @explode("-", $id_venda_acesso);
+			if($exp_valor[1] != 1)
+			{
+				//ATUALIZO AS INFO. DO CLIENTE PENDENTE;
+				$acesso 	 = listaAcesso($conn, $exp_valor[1], $exp_valor[2]);
+				$qtd_acessos = $acesso['total'] - $exp_valor[3];
+				if($qtd_acessos < $acesso['consumido'])
+				{
+					$valor_total = retornar_preco_total_acesso($conn, $exp_valor[2], $acesso['consumido'] - $qtd_acessos);
+					replace_cliente_pendente($conn, $exp_valor[1], $exp_valor[2], $valor_total);
+				}
+				else
+				{
+					deleta_cliente_pendente($conn, $exp_valor[1], $exp_valor[2]);
+				}
+			}
+			
+			$retorno = deletaVendaAcesso($conn, $exp_valor[0]);
+			if($retorno != false)
+			{
+				$msg = "[AVISO] Venda de acesso deletado com sucesso!";
+				header("location: clientes_historico.php?msg=$msg");
+				die();
+			}
+			else
+			{
+				$msg = "[AVISO] Falha ao deletar a venda de acesso!";
+				header("location: clientes_historico.php?msg=$msg&erro=1");
+				die();
+			}
+		}
 		break;
 
 	default:
@@ -136,16 +171,50 @@ $(document).ready(function(){
 	  endDate: dia_atual + '/' + mes_atual + '/2017'
   });
 
+	$(".deletar-acesso").click(function(){
+		var id = $(this).data("id");
+		$("#deleta_venda_acesso").attr("value", id);
+	});
 });
 </script>
+
+<style>
+	table tr td .fa
+	{
+		cursor: pointer;
+		font-size: 22px;
+	}
+</style>
 
 <!-- Content Header (Page header) -->
 <section class="content-header">
   <h1>
-    Histórico de Compras
-    <small>Compra de acessos</small>
+    Histórico de Vendas
+    <small>Venda de acessos</small>
   </h1>
 </section>
+
+<!-- Modal ALERTA -->
+<div class="modal  modal-danger fade in" id="alerta" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog modal-dispositivo" role="document">
+    <div class="modal-content">
+     <form action="clientes_historico.php" method="post">
+     <input type="hidden" name="id_venda_acesso" id="deleta_venda_acesso">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Alerta!</h4>
+      </div>
+      <div class="modal-body">
+        Você realmente deseja deletar essa venda de acesso?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-dismiss="modal">Fechar</button>
+        <button type="submit" class="btn btn-success" name="acao" value="deletar">Prosseguir</button>
+      </div>
+     </form>
+    </div>
+  </div>
+</div>
 
 <!-- Main content -->
 <section class="content">
@@ -213,6 +282,7 @@ $(document).ready(function(){
                 <th style="text-align:center;">Tipo de Acesso</th>
                 <th style="text-align:center;">Quantidade</th>
                 <th style="text-align:center;">Valor</th>
+                <th style="text-align:center;">Excluir</th>
               </tr>
             
             </thead>
@@ -232,6 +302,10 @@ $(document).ready(function(){
 		                <td align="center"><?php echo $historico['nome_acesso']; ?></td>
 		                <td align="center"><?php echo $historico['qtde_acesso']; ?></td>
 		                <td align="right"><?php echo $valor_venda; ?></td>
+		                <td align="center">
+		                	<i class="fa fa-times deletar-acesso" style="color: red;" aria-hidden="true"  data-toggle="modal" data-target="#alerta" 
+		                		data-id="<?php echo $historico['id_venda_acesso']."-".$historico['id_cliente']."-".$historico['id_tipo_acesso']."-".$historico['qtde_acesso']; ?>"></i>
+                		</td>
 		              </tr>
 		            <?php 
 						}
@@ -251,10 +325,11 @@ $(document).ready(function(){
             <tbody style="border-top: none;">
 	            <tr>
 	            	<th colspan="4" style="text-align:right;">Total</th>
-	            	<th colspan="4" style="text-align:right;color: #2cb03c;">
+	            	<th style="text-align:right;color: #2cb03c;">
 	            	  	<i class="fa fa-usd"></i>
 	            		<?php echo $total_venda; ?>
 	            	</th>
+	            	<th></th>
 	            </tr>
             </tbody>
           </table>

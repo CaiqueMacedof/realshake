@@ -1,5 +1,5 @@
 <?php
-
+	date_default_timezone_set('America/Sao_Paulo');
 	//header("Content-Type: text/html; charset=ISO-8859-1");
 
 	if(!isset($_SESSION))
@@ -118,7 +118,7 @@ function checkTime(i){
 #relogio
 {
     padding: 8px 15px;
-    background: #00a458;
+    background: #0ea246;
     color: white;
     font-size: 25px;
     font-weight: bold;
@@ -163,9 +163,9 @@ function checkTime(i){
           </a>
           <ul class="treeview-menu">
             <li id="2-2"><a href="clientes.php">Clientes</a></li>
-            <li id="2-3"><a href="cliente_acesso_rapido.php">Acesso rápido</a></li>
-            <li id="2-4"><a href="cliente_baixa_acesso.php">Histórico Baixa de Acesso</a></li>
-            <li id="2-5"><a href="clientes_historico.php">Histórico Compra de Acesso</a></li>
+            <li id="2-3"><a href="cliente_acesso_rapido.php">Acesso Rápido</a></li>
+            <li id="2-4"><a href="cliente_baixa_acesso.php">Histórico Consumo de Acesso</a></li>
+            <li id="2-5"><a href="clientes_historico.php">Histórico Venda de Acesso</a></li>
           </ul>
         </li>
     	

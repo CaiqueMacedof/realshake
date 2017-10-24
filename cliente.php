@@ -70,7 +70,10 @@
 			
 			if($nome != "" && $origem != "" && $sexo != "")
 			{
-				$data_formatada = date("Y-m-d", strtotime($data_nasc));
+				if(!empty($data_nasc))
+					$data_formatada = date("Y-m-d", strtotime(str_replace("/", "-", $data_nasc)));
+				else
+					$data_formatada = NULL;
 				
 				$resultado = atualizaCliente($conn, $id_cliente, $nome, $email, $celular, $data_formatada, $origem, $sexo);
 
@@ -116,7 +119,7 @@
 				$data_nasc 		= $clientes[0]['DATA_ANIVERSARIO'];
 				
 				if(!empty($clientes[0]['DATA_ANIVERSARIO']))
-					$data_nasc 	= date("m/d/Y", strtotime($clientes[0]['DATA_ANIVERSARIO']));
+					$data_nasc 	= date("d/m/Y", strtotime($clientes[0]['DATA_ANIVERSARIO']));
 				else
 					$data_nasc  = NULL;
 			}

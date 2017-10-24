@@ -27,9 +27,6 @@ if(is_array($frequencias) && count($frequencias) > 0)
 	$i = 0;
 	foreach ($frequencias as $topFrequencia)
 	{
-		if($topFrequencia['ID_CLIENTE'] == 1)
-			continue;
-			
 		//Busca os avatares masculinos, senão busca os feminino
 		$imagem = buscarAvatar($topFrequencia['sexo']);
 		//Busca as cores

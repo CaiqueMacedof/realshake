@@ -32,7 +32,24 @@ switch ($action){
 		$id_baixa_acesso = isset($_REQUEST['id_baixa_acesso']) ? $_REQUEST['id_baixa_acesso'] : null;
 		if(!empty($id_baixa_acesso))
 		{
-			$retorno = deletaBaixaAcesso($conn, $id_baixa_acesso);
+			$exp_valor 	= @explode("-", $id_baixa_acesso);
+			if($exp_valor[1] != 1)
+			{
+				//ATUALIZO AS INFO. DO CLIENTE PENDENTE;
+				$acesso 	 = listaAcesso($conn, $exp_valor[1], $exp_valor[2]);
+				$qtd_acessos = $acesso['consumido'] - $exp_valor[3];
+				if($qtd_acessos > $acesso['total'])
+				{
+					$valor_total = retornar_preco_total_acesso($conn, $exp_valor[2], $qtd_acessos - $acesso['total']);
+					replace_cliente_pendente($conn, $exp_valor[1], $exp_valor[2], $valor_total);
+				}
+				else
+				{
+					deleta_cliente_pendente($conn, $exp_valor[1], $exp_valor[2]);
+				}
+			}
+				
+			$retorno 	= deletaBaixaAcesso($conn, $exp_valor[0]);
 			if($retorno != false)
 			{
 				$msg = "[AVISO] Baixa de acesso deletado com sucesso!";
@@ -168,8 +185,8 @@ $(document).ready(function(){
 <!-- Content Header (Page header) -->
 <section class="content-header">
   <h1>
-    Histórico de Compras
-    <small>Compra de acessos</small>
+    Histórico de Consumos
+    <small>Consumo de acessos</small>
   </h1>
 </section>
 
@@ -285,13 +302,13 @@ $(document).ready(function(){
 							$data_venda  = date("d/m/Y - H:i:s", strtotime($historico['data_baixa']));
 						?>
 		              <tr>
-		                <td><?php echo !empty($historico['nome_cliente']) ? $historico['nome_cliente'] : "avulso"; ?></td>
+		                <td><?php echo $historico['nome_cliente']; ?></td>
 		                <td align="center"><?php echo $data_venda; ?></td>
 		                <td align="center"><?php echo $historico['nome_acesso']; ?></td>
 		                <td align="center"><?php echo $historico['qtde_acesso']; ?></td>
 		                <td align="center">
 		                	<i class="fa fa-times deletar-acesso" style="color: red;" aria-hidden="true"  data-toggle="modal" data-target="#alerta" 
-		                		data-id="<?php echo $historico['id_baixa_acesso']; ?>"></i>
+		                		data-id="<?php echo $historico['id_baixa_acesso']."-".$historico['id_cliente']."-".$historico['id_tipo_acesso']."-".$historico['qtde_acesso']; ?>"></i>
                 		</td>
 		              </tr>
 		            <?php 

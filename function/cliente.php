@@ -1,25 +1,51 @@
 <?php
 function insertCliente($conn, $nome, $email, $celular, $data_nasc, $origem, $sexo)
 {
-	$query = sprintf("INSERT INTO cliente
-				     (
-					  nome, celular, data_aniversario, 
-					  email, data_inicio, origem,
-			          sexo
-					 )
-			 		 VALUES
-					 (
-					  '%s', '%s', ".mysqli_real_escape_string($conn, $data_nasc).", 
-					  '%s', NOW(), '%s',
-					  %d
-					  )", 
-			
-			mysqli_real_escape_string($conn, $nome),
-			mysqli_real_escape_string($conn, $celular),
-			
-			mysqli_real_escape_string($conn, $email),
-			mysqli_real_escape_string($conn, $origem),
-			mysqli_real_escape_string($conn, $sexo));
+	if(!empty($data_nasc))
+	{
+		$query = sprintf("INSERT INTO cliente
+					     (
+						  nome, celular, data_aniversario, 
+						  email, data_inicio, origem,
+				          sexo
+						 )
+				 		 VALUES
+						 (
+						  '%s', '%s', '".mysqli_real_escape_string($conn, $data_nasc)."', 
+						  '%s', NOW(), '%s',
+						  %d
+						  )", 
+				
+				mysqli_real_escape_string($conn, $nome),
+				mysqli_real_escape_string($conn, $celular),
+				
+				mysqli_real_escape_string($conn, $email),
+				mysqli_real_escape_string($conn, $origem),
+				mysqli_real_escape_string($conn, $sexo));
+		
+	}
+	else
+	{
+		$query = sprintf("INSERT INTO cliente
+			     (
+				  nome, celular, data_aniversario, 
+				  email, data_inicio, origem,
+		          sexo
+				 )
+		 		 VALUES
+				 (
+				  '%s', '%s', NULL, 
+				  '%s', NOW(), '%s',
+				  %d
+				  )", 
+		
+		mysqli_real_escape_string($conn, $nome),
+		mysqli_real_escape_string($conn, $celular),
+		
+		mysqli_real_escape_string($conn, $email),
+		mysqli_real_escape_string($conn, $origem),
+		mysqli_real_escape_string($conn, $sexo));
+	}
 	
 	$result = mysqli_query($conn, $query);
 	if($result)
@@ -38,7 +64,7 @@ function listaCliente($conn, $id_cliente = NULL, $nome = NULL, $celular = NULL, 
 			INNER JOIN tipo_contato
 			ON cli.origem = tipo_contato.id_tipo_contato
 			
-			WHERE 1 = 1";
+			WHERE 1 = 1 AND cli.id_cliente != 1 AND cli.deletado = 0";
 	
 	if($id_cliente != NULL)
 		$query .= " AND cli.id_cliente = ". mysqli_real_escape_string($conn, $id_cliente);
@@ -62,7 +88,7 @@ function listaCliente($conn, $id_cliente = NULL, $nome = NULL, $celular = NULL, 
 				mysqli_real_escape_string($conn, $fim) );
 		
 	}*/
-	//echo $query;die;
+	// $query;die;
 	$resultado = mysqli_query($conn, $query);
 
 	if($resultado != false)
@@ -73,10 +99,13 @@ function listaCliente($conn, $id_cliente = NULL, $nome = NULL, $celular = NULL, 
 
 function atualizaCliente($conn, $id_cliente, $nome, $email, $celular, $data_nasc, $origem, $sexo)
 {
-	$query = sprintf("UPDATE cliente
+	//TODO: DEPOIS ARRUMAR A GAMBIARA ABAIXO!
+	if(!empty($data_nasc))
+	{
+		$query = sprintf("UPDATE cliente
 				      SET nome 				= '%s',
 					      celular			= '%s',
-					      data_aniversario	= '%s',
+					      data_aniversario	= '".mysqli_real_escape_string($conn, $data_nasc)."',
 					   	  email				= '%s', 
 					      origem			= '%s',
 						  sexo				= %d
@@ -85,14 +114,33 @@ function atualizaCliente($conn, $id_cliente, $nome, $email, $celular, $data_nasc
 				
 			mysqli_real_escape_string($conn, $nome),
 			mysqli_real_escape_string($conn, $celular),
-			mysqli_real_escape_string($conn, $data_nasc),				
 			mysqli_real_escape_string($conn, $email),
 			mysqli_real_escape_string($conn, $origem),
 			mysqli_real_escape_string($conn, $sexo),
 			
 			mysqli_real_escape_string($conn, $id_cliente) );
+	}
+	else
+	{
+		$query = sprintf("UPDATE cliente
+					      SET nome 				= '%s',
+						      celular			= '%s',
+						   	  data_aniversario	= NULL,
+						   	  email				= '%s',
+						      origem			= '%s',
+							  sexo				= %d
+				 		 WHERE
+							  id_cliente 		=  %d",
+					
+				mysqli_real_escape_string($conn, $nome),
+				mysqli_real_escape_string($conn, $celular),
+				mysqli_real_escape_string($conn, $email),
+				mysqli_real_escape_string($conn, $origem),
+				mysqli_real_escape_string($conn, $sexo),
+				
+				mysqli_real_escape_string($conn, $id_cliente) );
+	}
 	
-	//echo $query;die;
 	$result = mysqli_query($conn, $query);
 	if($result)
 		return true;
@@ -100,6 +148,68 @@ function atualizaCliente($conn, $id_cliente, $nome, $email, $celular, $data_nasc
 		return false;
 }
 
+function deletaCliente($conn, $id_cliente)
+{
+	$query = sprintf("	DELETE FROM cliente_pendente
+							WHERE id_cliente = %d", mysqli_real_escape_string($conn, $id_cliente));
+	
+	$result = mysqli_query($conn, $query);
+	if($result != false)
+	{
+		/*$query = sprintf("	DELETE FROM venda_acesso
+							WHERE id_cliente = %d", mysqli_real_escape_string($conn, $id_cliente));
+		
+		$result = mysqli_query($conn, $query);
+		if($result != false)
+		{
+			$query = sprintf("	DELETE FROM baixa_acesso
+								WHERE id_cliente = %d", mysqli_real_escape_string($conn, $id_cliente));
+			
+			$result = mysqli_query($conn, $query);
+			if($result != false)
+			{*/
+				$query = sprintf("	UPDATE cliente
+									    SET deletado = 1
+									WHERE id_cliente = %d", mysqli_real_escape_string($conn, $id_cliente));
+				
+				$result = mysqli_query($conn, $query);
+				if($result != false)
+				{
+					return $result;
+				}
+				else
+				{
+					return false;
+				}
+			/*}
+			else
+			{
+				return false;
+			}
+		}
+		else
+		{
+			return false;
+		}*/
+	}
+	else
+	{
+		return false;
+	}
+	
+}
+
+function deletaVendaAcesso($conn, $id_venda_acesso)
+{
+	$query = sprintf("DELETE FROM venda_acesso
+						WHERE id_venda_acesso = %d", mysqli_real_escape_string($conn, $id_venda_acesso));
+	
+	$resultado = mysqli_query($conn, $query);
+	if($resultado != false)
+		return true;
+	else
+		return false;
+}
 
 function deletaBaixaAcesso($conn, $id_baixa_acesso)
 {
@@ -113,13 +223,16 @@ function deletaBaixaAcesso($conn, $id_baixa_acesso)
 		return false;
 }
 
-function insereAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso, $total_venda_acesso, $tipo_pagamento)
+function insereAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso, $total_venda_acesso, $tipo_pagamento, $data_hora = NULL)
 {
+	if($data_hora == NULL){$data_hora = date("Y-m-d H:i:s");}
+
 	$query = sprintf("	INSERT INTO venda_acesso
 						(data_venda, id_tipo_acesso, qtde_acesso, id_cliente, valor_venda_acesso, tipo_pagamento)
 						VALUES
-						(NOW(), %d, %d, %d, %d, %d)", 
+						('%s', %d, %d, %d, %d, %d)", 
 	
+	mysqli_real_escape_string($conn, $data_hora),
 	mysqli_real_escape_string($conn, $id_tipo_acesso),
 	mysqli_real_escape_string($conn, $qtd_acesso),
 	mysqli_real_escape_string($conn, $id_cliente),
@@ -134,13 +247,16 @@ function insereAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso, $total_v
 	
 }
 
-function baixaAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso)
+function baixaAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso, $data_hora = NULL)
 {
+	if($data_hora == NULL){$data_hora = date("Y-m-d H:i:s");}
+
 	$query = sprintf("	INSERT INTO baixa_acesso
 						(data_hora_baixa_acesso, id_cliente, id_tipo_acesso, qtde_acesso)
 						VALUES
-						(NOW(), %d, %d, %d)",
-
+						('%s', %d, %d, %d)",
+			
+			mysqli_real_escape_string($conn, $data_hora),
 			mysqli_real_escape_string($conn, $id_cliente),
 			mysqli_real_escape_string($conn, $id_tipo_acesso),
 			mysqli_real_escape_string($conn, $qtd_acesso));
@@ -186,7 +302,6 @@ function lista_tipo_contato($conn)
 	
 }
 
-
 function listaAcesso($conn, $id_cliente, $tipo_acesso)
 {
 	$query = sprintf("CALL consumoAcesso(%d, %d)", 
@@ -205,12 +320,14 @@ function listaAcesso($conn, $id_cliente, $tipo_acesso)
 	}
 	else
 		return false;
-
 }
 
 function listarHistoricoCliente($conn, $agrupar = FALSE, $nome = FALSE, $dataHora_inicio = FALSE, $dataHora_final = FALSE)
 {
-	$query = sprintf("	SELECT 
+	$query = sprintf("	SELECT
+							va.id_venda_acesso,
+							va.id_cliente,
+							va.id_tipo_acesso,
 							cli.nome  as nome_cliente,
 						    va.data_venda,
 						    ta.nome  as nome_acesso,
@@ -218,7 +335,7 @@ function listarHistoricoCliente($conn, $agrupar = FALSE, $nome = FALSE, $dataHor
 						    valor_venda_acesso
 						    
 						FROM venda_acesso as va
-							LEFT JOIN cliente as cli
+							INNER JOIN cliente as cli
 							on va.id_cliente = cli.id_cliente
 							LEFT JOIN tipo_acesso as ta
 							on va.id_tipo_acesso = ta.id_tipo_acesso
@@ -258,7 +375,10 @@ function listarHistoricoClienteBaixa($conn, $agrupar = FALSE, $nome = FALSE, $da
 {
 	$query = sprintf("	SELECT 
 							ba.id_baixa_acesso,
+							ba.id_cliente,
+							ba.id_tipo_acesso,
 							cli.nome  as nome_cliente,
+							cli.deletado,
 						    ba.data_hora_baixa_acesso  as data_baixa,
 						    ta.nome as nome_acesso,
 						    qtde_acesso
@@ -288,7 +408,7 @@ function listarHistoricoClienteBaixa($conn, $agrupar = FALSE, $nome = FALSE, $da
 		$query .= " " . $agrupar;
 	}
 	$query .= " ORDER BY data_baixa DESC";
-	
+	//echo $query;die;
 	$resultado = mysqli_query($conn, $query);
 	if($resultado != false)
 	{
@@ -307,16 +427,17 @@ function totalQtdVendaAcesso($conn, $nome = FALSE, $dataHora_inicio = FALSE, $da
 						FROM venda_acesso as va
 						LEFT JOIN cliente as cli
 						on va.id_cliente = cli.id_cliente
+						WHERE 1 = 1
 					");
 	
 	if($nome != FALSE)
 	{
-		$query .= " and cli.nome like '%" . mysqli_real_escape_string($conn, $nome)."%'";
+		$query .= " AND cli.nome like '%" . mysqli_real_escape_string($conn, $nome)."%'";
 	}
 	
 	if($dataHora_inicio != FALSE && $dataHora_final != FALSE)
 	{
-		$query .= " and va.data_venda between
+		$query .= " AND va.data_venda between
 				'" . $dataHora_inicio . "' and '" . $dataHora_final . "'";
 	}
 				
@@ -384,10 +505,11 @@ function buscarFrequencias($conn, $nome=null, $celular=null)
 					cli.ID_CLIENTE,
 					cli.nome,
 					cli.sexo,
-					count(*) AS total_frequencia
+					count(*) AS total_frequencia,
+					cli.DELETADO
 				FROM baixa_acesso AS ba
 				INNER JOIN cliente AS cli ON ba.ID_CLIENTE = cli.id_cliente
-				WHERE 1=1";
+				WHERE 1=1 AND cli.id_cliente != 1 AND cli.DELETADO = 0";
 
 	if(!empty($nome))
 		$query .= " AND cli.nome LIKE '%".mysqli_real_escape_string($conn, $nome)."%'";
@@ -717,7 +839,7 @@ function criar_td($semana)
 {
 	$tds = "";
 	for($i = 0; $i < $semana; $i++)
-		$tds .= "<td align='center' class='box-inativo'>25</td>";
+		$tds .= "<td align='center' class='box-inativo'></td>";
 
 		return $tds;
 }

@@ -8,7 +8,6 @@
 	$action	  	  		= isset($_REQUEST['acao']) 				? $_REQUEST['acao'] 	 		: "";
 	$erro	  	  		= isset($_REQUEST['erro']) 				? $_REQUEST['erro'] 	 		: "";
 	$id_tipo_acesso 	= isset($_REQUEST['id_tipo_acesso']) 	? $_REQUEST['id_tipo_acesso'] 	: null;
-	$tipo_venda_baixa 	= isset($_REQUEST['tipo_venda_baixa']) 	? $_REQUEST['tipo_venda_baixa'] : null;
 	$qtd_acesso 		= isset($_REQUEST['qtd_acesso']) 		? $_REQUEST['qtd_acesso'] 		: 1;
 	$tipo_pagamento 	= isset($_REQUEST['tipo_pagamento']) 	? $_REQUEST['tipo_pagamento'] 	: 0;
 	
@@ -41,6 +40,18 @@
 			}
 			else
 			{
+				$acesso = listaAcesso($conn, $id_cliente, $id_tipo_acesso);
+				//somo o baixa acesso atual + o total que sera inserido, conseguindo saber se havera divergência
+				$qtd_acessos = $acesso['total'] - ($acesso['consumido'] + $qtd_acesso);
+			
+				if($qtd_acessos < 0)
+				{
+					$qtd_acessos = $qtd_acessos * -1;
+					$valor_total = retornar_preco_total_acesso($conn, $id_tipo_acesso, $qtd_acessos);
+	
+					replace_cliente_pendente($conn, $id_cliente, $id_tipo_acesso, $valor_total + $valor_taxa);
+				}
+				
 				baixaAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso);
 			}
 		
@@ -273,7 +284,7 @@ function buscaEscreveCliente(nome, celular)
              </div>
 	      <div class="modal-footer">
 	        <button type="button" class="btn btn-danger" data-dismiss="modal">Fechar</button>
-	        <button type="submit" class="btn btn-success" name="acao" value="inserir">Prosseguir</button>
+	        <button type="submit" class="btn btn-success" name="acao" value="inserir">Confirmar</button>
 	      </div>
 	     </form>
 	    </div>
@@ -342,14 +353,12 @@ function buscaEscreveCliente(nome, celular)
 					$i = 0;
 					foreach ($frequencias as $topFrequencia)
 					{
-						if($topFrequencia['ID_CLIENTE'] == 1)
-							continue;
 						//Busca os avatares masculinos, senão busca os feminino
 						$imagem = buscarAvatar($topFrequencia['sexo']);
 						//Busca as cores
 						$cor = buscarCor($i);
 						
-						if($topFrequencia['total_frequencia'] == 1)
+						if($topFrequencia['total_frequencia'] == 1 || $topFrequencia['DELETADO'] == 1)
 							$texto = "1 Frequência";
 						else
 							$texto = $topFrequencia['total_frequencia'] . " Frequências";

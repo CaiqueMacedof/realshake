@@ -40,6 +40,8 @@
 		$qtd_acesso_total 	= isset($_REQUEST['qtd_acesso_total']) 		? $_REQUEST['qtd_acesso_total'] : null;
 		$tipo_venda_baixa 	= isset($_REQUEST['tipo_venda_baixa']) 		? $_REQUEST['tipo_venda_baixa'] : null;
 		$tipo_pagamento 	= isset($_REQUEST['tipo_pagamento']) 		? $_REQUEST['tipo_pagamento'] 	: 0;
+		$date 	  			= isset($_REQUEST['date']) 					? $_REQUEST['date'] 	 		: "";
+		$time	  			= isset($_REQUEST['time']) 					? $_REQUEST['time'] 	 		: "";
 	}
 	
 	
@@ -51,12 +53,12 @@
 			if($nome != "" && $origem != "" && $sexo != "")
 			{
 				if(!empty($data_nasc))
-					$data_formatada = date("Y-m-d", strtotime($data_nasc));
+					$data_formatada = date("Y-m-d", strtotime(str_replace("/", "-", $data_nasc)));
 				else
-					$data_formatada = "NULL";
+					$data_formatada = NULL;
 				
 				$resultado = insertCliente($conn, $nome, $email, $celular, $data_formatada, $origem, $sexo);
-				if($resultado)
+				if($resultado == true)
 				{
 					$msg = "[AVISO] Cliente cadastrado com sucesso!";
 					header("location: clientes.php?msg=$msg");
@@ -142,9 +144,15 @@
 		case 'inserir':
 			$id_cliente = isset($_REQUEST['id_cliente']) ? $_REQUEST['id_cliente'] : null;
 			
-			if(empty($tipo_pagamento) && $tipo_venda_baixa == 0)
+			if(empty($tipo_pagamento) && $qtd_acesso_total > 0)
 			{
 				$msg = "[AVISO] Selecione uma forma de pagamento.";
+				header("location: clientes.php?msg=$msg&erro=1");
+				die();
+			}
+			else if($qtd_acesso_uso < 1 && $qtd_acesso_total < 1)
+			{
+				$msg = "[AVISO] Selecione a quantidade de acessos a ser inseridos.";
 				header("location: clientes.php?msg=$msg&erro=1");
 				die();
 			}
@@ -153,12 +161,15 @@
 			 **** VENDA DO ACESSO ****
 			 ***********************/
 			//$valor_taxa  	= retornar_valor_taxa($tipo_pagamento, $qtd_acesso_total[$i]);
-			
+			if(!empty($date) && !empty($time))
+				$data_formatada = date("Y-m-d", strtotime(str_replace("/", "-", $date))) ." ". date("H:i:s", strtotime($time));
+			else
+				$data_formatada = NULL;
+				
 			if($qtd_acesso_total > 0)
 			{
 				$acesso 	 	= listaAcesso($conn, $id_cliente, $id_tipo_acesso);
-				$total_pendente = listar_pendente_cliente($conn, $id_cliente);
-				
+				//somo o baixa acesso atual + o total que sera inserido, conseguindo saber se havera divergência
 				$qtd_acessos = ($acesso['total'] + $qtd_acesso_total) - $acesso['consumido'];
 				
 				if($qtd_acessos < 0)
@@ -174,7 +185,7 @@
 				}
 	
 				$tipo_acesso    = lista_tipo_acesso($conn, $id_tipo_acesso);
-				$retorno_insere = insereAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso_total, ($qtd_acesso_total * $tipo_acesso[0]['valor_tipo_acesso'] + $valor_taxa), $tipo_pagamento);
+				$retorno_insere = insereAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso_total, ($qtd_acesso_total * $tipo_acesso[0]['valor_tipo_acesso'] + $valor_taxa), $tipo_pagamento, $data_formatada);
 			}
 			
 			/*************************
@@ -183,7 +194,6 @@
 			if($qtd_acesso_uso > 0)
 			{
 				$acesso = listaAcesso($conn, $id_cliente, $id_tipo_acesso);
-				
 				//somo o baixa acesso atual + o total que sera inserido, conseguindo saber se havera divergência
 				$qtd_acessos = $acesso['total'] - ($acesso['consumido'] + $qtd_acesso_uso);
 				
@@ -195,7 +205,7 @@
 					replace_cliente_pendente($conn, $id_cliente, $id_tipo_acesso, $valor_total + $valor_taxa);
 				}
 				
-				$retorno_baixa = baixaAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso_uso);
+				$retorno_baixa = baixaAcesso($conn, $id_cliente, $id_tipo_acesso, $qtd_acesso_uso, $data_formatada);
 			}
 				
 			header("location: clientes.php?msg=Acesso inserido com sucesso!");
@@ -278,13 +288,12 @@ $(document).ready(function(){
   $("[data-mask]").inputmask();
 
   //Date picker
-  //Date picker
-  $('#datepicker').datepicker({
+  $('#datepicker, #datepicker_acessos').datepicker({
       todayBtn: "linked",
       language: "it",
       autoclose: true,
       todayHighlight: true,
-      format: 'dd/mm/yyyy' 
+      format: 'dd/mm/yyyy'
   });
 
 	$(".deletar-cliente").click(function(){
@@ -301,8 +310,10 @@ $(document).ready(function(){
 			$(".uso").val("0");
 			$(".total").val("0");
 			$(".input-preco-acesso").val("R$ 0,00");
+			$("#datepicker_acessos").val("");
+			$(".time").val("");
 			$('.tipo_acesso option[value=0]').attr('selected',true);
-			$('.tipo_pagamento option[value=0]').attr('selected',true);
+			$('.select_tipo_pagamento option[value=0]').attr('selected',true);
 			
 			$(".pop-up-tabela #1, .pop-up-tabela #2, .pop-up-tabela #3").remove();//Remove as linhas criadas no ajax;   
 		}
@@ -313,8 +324,10 @@ $(document).ready(function(){
 			$(".uso").val("0");
 			$(".total").val("0");
 			$(".input-preco-acesso").val("R$ 0,00");
+			$("#datepicker_acessos").val("");
+			$(".time").val("");
 			$('.tipo_acesso option[value=0]').attr('selected',true);
-			$('.tipo_pagamento option[value=0]').attr('selected',true);
+			$('.select_tipo_pagamento option[value=0]').attr('selected',true);
 			
 			$(".pop-up-tabela #1, .pop-up-tabela #2, .pop-up-tabela #3").remove();
 		}
@@ -390,8 +403,10 @@ $(document).ready(function(){
 		$(".uso").val("0");
 		$(".total").val("0");
 		$(".input-preco-acesso").val("R$ 0,00");
+		$("#datepicker_acessos").val("");
+		$(".time").val("");
 		$('.tipo_acesso option[value=0]').attr('selected',true);
-		$('.tipo_pagamento option[value=0]').attr('selected',true);
+		$('.select_tipo_pagamento option[value=0]').attr('selected',true);
 
 		//Remove as linhas criadas no ajax;
 		$(".pop-up-tabela #1, .pop-up-tabela #2, .pop-up-tabela #3").remove();
@@ -668,7 +683,7 @@ function resetaCor(elemento)
 	}
 	
 </style>
-
+<script src="plugins/timepicker/bootstrap-timepicker.js"></script>
 <!-- Content Header (Page header) -->
 <section class="content-header">
   <h1>
@@ -721,7 +736,7 @@ function resetaCor(elemento)
 	     <input type="hidden" name="id_cliente" class="id_cliente" />
 	      <div class="modal-header">
 	        <button type="button" class="close btn_close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-	        <h4 class="modal-title" id="myModalLabel">Cadastro de Acesso</h4>
+	        <h4 class="modal-title" id="myModalLabel"><span class="nome_cliente" style="font-weight: 400;font-size: 25px;"></span></h4>
 	      </div>
 	      
 	      <div class="modal-body">
@@ -775,18 +790,21 @@ function resetaCor(elemento)
 	                </div>
 	                
 	                <div class="form-group col-xs-12 tipo_pagamento" style="display:none;">
-	                  	<select class="tipo_pagamento form-control" name="tipo_pagamento" style="width: 100%;">
-		                  	<option>Formas de Pagamento</option>
+	                  	<select class="select_tipo_pagamento form-control" name="tipo_pagamento" style="width: 100%;">
+		                  	<option value="0">Formas de Pagamento</option>
 		                  	<option value="1">Cartão de Débito/Dinheiro</option>
 		                  	<!--option value="2">Cartão de Crédito</option>
 		                  	<option value="3">Vale Refeição/Alimentação</option-->
 	              		</select>
 	                </div>
 	                
-	                <div class="form-group col-xs-8" style="margin: 15px 0 0 0;">
-	                  	<b>Cliente: <span class="nome_cliente"></span></b>
-	                </div>
-					
+	                <div class="form-group col-md-12 col-sm-12 col-xs-12">
+	                  <input class="form-control" type="text" name="date" class="form-control data" id="datepicker_acessos" data-inputmask="'alias': 'dd/mm/yyyy'" placeholder="Data" data-mask>
+                	</div>
+                	
+	                <div class="form-group col-md-12 col-sm-12 col-xs-12">
+	                    <input type="time" name="time" class="form-control time" placeholder="Hora">
+                	</div>
 					<!--div class="form-group col-xs-4" style="margin: 15px 0 0 0;">
 						<button type="button" class="col-lg-12 col-xs-12 col-sm-12 btn_add_carrinho">+Add</button>
 					</div>	                
@@ -833,7 +851,7 @@ function resetaCor(elemento)
 	      
 	      <div class="modal-footer">
 	        <button type="button" class="btn btn-danger btn_close" data-dismiss="modal">Fechar</button>
-	        <button type="submit" class="btn btn-success" name="acao" value="inserir">Comprar</button>
+	        <button type="submit" class="btn btn-success" name="acao" value="inserir">Confirmar</button>
 	      </div>
 	     
 	     </form>
@@ -872,7 +890,7 @@ function resetaCor(elemento)
                 <div class="form-group col-md-6 col-sm-6 col-xs-12">
                   <label>Sexo:*</label>
 	                  <select class="form-control select2" name="sexo" style="width: 100%;">
-		                  <option value="-1" selected="selected" disabled>Selecione o sexo</option>
+		                  <option value="-1" selected disabled>Selecione o sexo</option>
 		                  <option value="0">Masculino</option>
 		                  <option value="1">Feminino</option>
               		  </select>
@@ -912,7 +930,7 @@ function resetaCor(elemento)
 	      </div>
 	      
 	      <div class="modal-footer">
-	        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	        <button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
 	        <button type="submit" class="btn btn-primary" value="cadastrar" name="acao">Cadastrar</button>
 	      </div>
 	      </form>
@@ -997,8 +1015,6 @@ function resetaCor(elemento)
 			{
 				foreach ($clientes as $cliente)
 				{
-					if($cliente['ID_CLIENTE'] == 1)
-						continue;
 					$data_nascimento = date("d/m/Y", strtotime($cliente['DATA_ANIVERSARIO']));
 				?>
               <tr>
