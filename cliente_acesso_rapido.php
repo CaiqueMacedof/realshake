@@ -194,7 +194,7 @@ function buscaEscreveCliente(nome, celular)
 
 <!-- Modal inserir Acesso r�pido -->
 	<div class="modal  modal-default fade in" id="acesso_rapido" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-	  <div class="modal-dialog" role="document" style="width: 20%">
+	  <div class="modal-dialog modal-dispositivo" role="document" style="width: 380px;">
 	    <div class="modal-content">
 	     <form action="cliente_acesso_rapido.php" method="post">
 	     <input type="hidden" name="id_cliente" id="cliente">
@@ -355,6 +355,9 @@ function buscaEscreveCliente(nome, celular)
 					{
 						//Busca os avatares masculinos, senão busca os feminino
 						$imagem = buscarAvatar($topFrequencia['sexo']);
+						if($i == 23)
+							$i = 0;
+						
 						//Busca as cores
 						$cor = buscarCor($i);
 						

@@ -31,7 +31,9 @@ switch ($action){
 		if(!empty($id_venda_acesso))
 		{
 			$exp_valor 	= @explode("-", $id_venda_acesso);
-			if($exp_valor[1] != 1)
+			
+			//não pode ser cliente com id 1 e deletado = 1;
+			if($exp_valor[1] != 1 && $exp_valor[4] != 1)
 			{
 				//ATUALIZO AS INFO. DO CLIENTE PENDENTE;
 				$acesso 	 = listaAcesso($conn, $exp_valor[1], $exp_valor[2]);
@@ -304,7 +306,7 @@ $(document).ready(function(){
 		                <td align="right"><?php echo $valor_venda; ?></td>
 		                <td align="center">
 		                	<i class="fa fa-times deletar-acesso" style="color: red;" aria-hidden="true"  data-toggle="modal" data-target="#alerta" 
-		                		data-id="<?php echo $historico['id_venda_acesso']."-".$historico['id_cliente']."-".$historico['id_tipo_acesso']."-".$historico['qtde_acesso']; ?>"></i>
+		                		data-id="<?php echo $historico['id_venda_acesso']."-".$historico['id_cliente']."-".$historico['id_tipo_acesso']."-".$historico['qtde_acesso']."-".$historico['deletado']; ?>"></i>
                 		</td>
 		              </tr>
 		            <?php 

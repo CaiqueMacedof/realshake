@@ -29,9 +29,12 @@ if(is_array($frequencias) && count($frequencias) > 0)
 	{
 		//Busca os avatares masculinos, senão busca os feminino
 		$imagem = buscarAvatar($topFrequencia['sexo']);
-		//Busca as cores
-		$cor = buscarCor($i);
 		
+		//Busca as cores
+		if($i == 23)
+			$i = 0;
+			
+		$cor = buscarCor($i);
 		if($topFrequencia['total_frequencia'] == 1)
 			$texto = "1 Frequência";
 		else

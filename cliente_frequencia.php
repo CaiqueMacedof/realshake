@@ -4,6 +4,10 @@ require_once("function/cliente.php");
 
 $id_cliente = isset($_REQUEST['id']) ? $_REQUEST['id'] : header("location: clientes.php");
 $cliente	= listaCliente($conn, $id_cliente);
+
+$shake 		= listaAcesso($conn, $id_cliente, 1);
+$sopa  		= listaAcesso($conn, $id_cliente, 2);
+$nutrisoup 	= listaAcesso($conn, $id_cliente, 3);
 ?>
 
 <style>
@@ -43,7 +47,8 @@ $cliente	= listaCliente($conn, $id_cliente);
 	
 	.dia-ativo
 	{
-	    background: rgba(229,229,229,0.4);
+	    background: rgba(244, 67, 54, 0.61);
+	    color: white!important;
 	}
 	
 	.btn
@@ -94,11 +99,12 @@ $cliente	= listaCliente($conn, $id_cliente);
 	
 	div.box-info-calendar > p
 	{
-	    display: block;
-	    color: white;
+        display: block;
+    	color: white;
 	    margin: 5px;
-	    padding: 1px 4px;
-	    height: 22px;;
+	    padding: 3px 8px;
+	    font-size: 19px;
+	    font-weight: 600;
 	}
 </style>
 
@@ -116,7 +122,10 @@ $(document).ready(function(){
 	$("#" + ano + "-" + mes).attr("style", "z-index: 1");
 	
 	if($("#" + ano + "-" + mes).find("#dia-" + dia).attr("class") == "")
+	{
 		$("#" + ano + "-" + mes).find("#dia-" + dia).attr("class", "dia-ativo");
+		$("#" + ano + "-" + mes).find("#dia-" + dia).text(dia + " - HOJE");
+	}
 
 
 	//PROXIMO E VOLTAR DO CALENDÁRIO 
@@ -154,10 +163,11 @@ $(document).ready(function(){
 <div class="row" style="background:white;">
     <div class="col-xs-12">
 		<div class="box-info-calendar">
-			<p style="background: #ff0035;">SHAKE</p>
-			<p style="background: #8b00ff;">SOPA</p>
-			<p style="background: #009688;">NUTRISOUP</p>
-			<p style="color: #5a5a5a;font-size: 18px;font-weight: 600;padding:0;">Cliente: <?php echo isset($cliente[0]['NOME']) ? $cliente[0]['NOME'] : ""; ?></p>
+			<p style="background: #ff0035;">SHAKE 		- <?php echo $shake['consumido'] 	. "/" . $shake['total']; 	 ?></p>
+			<p style="background: #8b00ff;">SOPA 		- <?php echo $sopa['consumido'] 	. "/" . $sopa['total']; 	 ?></p>
+			<p style="background: #009688;">NUTRISOUP 	- <?php echo $nutrisoup['consumido']. "/" . $nutrisoup['total']; ?></p>
+			
+			<p style="color: #5a5a5a;font-size: 24px;font-weight: 600;padding:0;">Cliente: <?php echo isset($cliente[0]['NOME']) ? $cliente[0]['NOME'] : ""; ?></p>
 		</div>
 		<?php echo gerar_calendario($conn,$id_cliente, 2015, 2017);?>
 	</div>

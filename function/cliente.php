@@ -329,6 +329,7 @@ function listarHistoricoCliente($conn, $agrupar = FALSE, $nome = FALSE, $dataHor
 							va.id_cliente,
 							va.id_tipo_acesso,
 							cli.nome  as nome_cliente,
+							cli.deletado,
 						    va.data_venda,
 						    ta.nome  as nome_acesso,
 						    qtde_acesso,
