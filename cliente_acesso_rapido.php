@@ -24,13 +24,6 @@
 				die();
 			}
 				
-			/*if($qtd_acesso <= 0)
-			{
-				$msg = "[AVISO] Quantidade de acesso deve ser maior que 0.";
-				header("location: cliente_acesso_rapido.php?msg=$msg&erro=1");
-				die();
-			}*/
-			
 			$tipo_acesso    = lista_tipo_acesso($conn, $id_tipo_acesso);
 			//CLIENTE AVULSO
 			if($id_cliente == 1)
@@ -238,7 +231,8 @@ function buscaEscreveCliente(nome, celular)
 		                <div class="form-group col-xs-12 tipo_pagamento" style="display: none">
 		                  	<select class="tipo_pagamento form-control" name="tipo_pagamento" style="width: 100%;">
 			                  	<option>Formas de Pagamento</option>
-			                  	<option value="1">Cartão de Débito/Dinheiro</option>
+			                  	<option value="1">Débito</option>
+			                  	<option value="2">Dinheiro</option>
 			                  	<!--option value="2">Cartão de Crédito</option>
 			                  	<option value="3">Vale Refeição/Alimentação</option-->
 		              		</select>

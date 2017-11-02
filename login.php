@@ -56,7 +56,7 @@
 	    		$_SESSION['tipo'] 	= $result[0]['tipo'];
 	    		
 	    		sleep(2);
-	    		header("location: index.php");
+	    		header("location: clientes.php");
 	    		die();
 	    	}
 	    	else

@@ -27,8 +27,11 @@ $(document).ready(function(){
 			$("#" + id_aba).attr("class", "treeview active");
 	}
 	else
+	{
 		//Aba padrão ao carregar o brownser sem nenhum cookie setado.
-		$("#1").attr("class", "treeview active");
+		$("#2").attr("class", "treeview active");
+		$("#2-2").attr("class", "treeview active");
+	}
 	
 	$(".treeview a, .treeview-menu li").click(function()
 	{

@@ -184,6 +184,16 @@ input[type=checkbox]
         display: none;
     }
     
+    .box-img-produto
+    {
+    	display:none;
+    }
+    
+    .inner-mobile
+    {
+    	width: 100%!important;
+    }
+    
     .text-small-content-header
     {
     	display: flex!important;

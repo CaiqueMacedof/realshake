@@ -647,12 +647,6 @@ function exibeMensagem(elemento, mensagem, mostra_msg = false)
 	return false;
 }
 
-function resetaCor(elemento)
-{
-	elemento.style.border = "1px solid #ccc";
-	return true;
-}
-
 </script>
 
 <style>
@@ -791,8 +785,8 @@ function resetaCor(elemento)
 	                
 	                <div class="form-group col-xs-12 tipo_pagamento" style="display:none;">
 	                  	<select class="select_tipo_pagamento form-control" name="tipo_pagamento" style="width: 100%;">
-		                  	<option value="0">Formas de Pagamento</option>
-		                  	<option value="1">Cartão de Débito/Dinheiro</option>
+		                  	<option value="1">Débito</option>
+		                  	<option value="2">Dinheiro</option>
 		                  	<!--option value="2">Cartão de Crédito</option>
 		                  	<option value="3">Vale Refeição/Alimentação</option-->
 	              		</select>

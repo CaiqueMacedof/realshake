@@ -167,13 +167,41 @@ $(document).ready(function(){
 	
 });
 
+function valida(f)
+{
+	$(".form-control").attr("style", "border: 1px solid #ccc!important");
+	var ret;
+	if(f.nome.value == "")
+		ret = exibeMensagem(f.nome, "Por favor, preencha o campo nome!")
+	
+	if(f.preco_compra.value == "")
+		ret = exibeMensagem(f.preco_compra, "Por favor, escolha um sexo!")
+	
+	if(f.preco_venda.value == "")
+		ret = exibeMensagem(f.preco_venda, "Por favor, escolha uma origem!")
+		
+	if(f.quantidade.value < 1)
+		ret = exibeMensagem(f.quantidade, "Por favor, escolha uma origem!")
+		
+	if(f.descricao.value == "")
+		ret = exibeMensagem(f.descricao, "Por favor, escolha a descrição do produto!")
+	
+	return ret;
+}
+
+function exibeMensagem(elemento, mensagem, mostra_msg = false)
+{
+	if(mostra_msg){alert(mensagem);}
+	elemento.style.border = "2px solid #ff7676";
+	return false;
+}
 </script>
 
 <!-- Content Header (Page header) -->
 <section class="content-header">
   <h1>
     Atualizar Cliente
-    <small></small>
+    <small>Alteração nos dados do cliente</small>
   </h1>
 </section>
 

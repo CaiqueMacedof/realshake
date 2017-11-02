@@ -90,7 +90,7 @@ $( function() {
     var availableTags = [
     <?php 
     
-    $historicos = listarHistoricoCliente($conn, " GROUP BY cli.nome");
+    $historicos = listarHistoricoClienteBaixa($conn, " GROUP BY cli.nome");
     $total  	= count($historicos);
     $i 			= 1;
 
