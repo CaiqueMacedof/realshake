@@ -19,7 +19,10 @@
 		case "salvar":
 			$regex_preco = "/^(([0-9]{1,10})|([0-9]{1,10}[,][0-9]{1,2}))$/";
 			
-			if($preco_venda < $preco_compra)
+			$preco_venda_verifica = converteNumero($preco_venda);
+			$preco_compra_verifica =  converteNumero($preco_compra);
+			
+			if($preco_venda_verifica < $preco_compra_verifica)
 			{
 				$msg = "[AVISO] O preço de venda não pode ser menor que o preço da compra!";
 				header("location: produtos.php?msg=$msg&acao=editar&id_produto=$id_produto&erro=1");
@@ -71,6 +74,14 @@
 				$descricao 		= $produtos[0]['descricao'];
 			}
 		break;
+	}
+
+	function converteNumero($numero)
+	{
+		$numero = str_replace(".", "", $numero);
+		$numero = str_replace(",", ".", $numero);
+		
+		return (float)$numero;
 	}
 ?>
 <style>

@@ -264,7 +264,7 @@ function buscaEscreveCliente(nome, celular)
 	
 <section class="content-header">
   <h1>
-    Venda Rápido
+    Venda de Produtos
     <small class="text-small-content-header">Lista dos produtos no sistema</small>
   </h1>
 </section>

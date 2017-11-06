@@ -177,7 +177,7 @@ function checkTime(i){
           </a>
           <ul class="treeview-menu">
             <li id="3-1"><a href="produtos.php">Produtos</a></li>
-			<li id="3-2"><a href="venda_rapida_produto.php">Venda Rápida</a></li>
+			<li id="3-2"><a href="venda_rapida_produto.php">Venda</a></li>
             <li id="3-3"><a href="produto_historico_compra.php">Histórico de Compra</a></li>
           </ul>
         </li>

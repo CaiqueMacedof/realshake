@@ -60,7 +60,6 @@ foreach ($estatisticas_pie as $estatistica)
 
 	$i++;
 }
-
 $total_clientes = quantidade_cliente($conn);
 ?>
 <!-- Styles -->
@@ -113,7 +112,7 @@ $(function () {
             text: 'Estatísticas Contato'
         },
         tooltip: {
-            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+            pointFormat: 'Total de Cliente: <b>{point.y}</b><br>{series.name}: <b>{point.percentage:.1f}%</b>'
         },
         plotOptions: {
             pie: {
@@ -126,7 +125,7 @@ $(function () {
             }
         },
         series: [{
-            name: 'Total em Porcentagem',
+            name: 'Porcentagem',
             colorByPoint: true,
             data: [<?php echo $pie_origem; ?>]
         }]
@@ -218,7 +217,7 @@ $(function () {
 				?>
 						<tr>
 							<th style="text-align:right;" colspan="2">Total</th>
-				            <td align="center" style="color: red;font-weight: 700;"><?php echo "R$ " . number_format($pendente['total_pendentes'], 2, ',', ' '); ?></td>
+				            <td align="center" style="color: red;font-weight: 700;"><?php echo "R$ " . number_format($total_pendente, 2, ',', ' '); ?></td>
 						</tr>
 				<?php
 				}

@@ -19,7 +19,10 @@
 		case "cadastrar":
 			$regex_preco = "/^(([0-9]{1,10})|([0-9]{1,10}[,][0-9]{1,2}))$/";
 			
-			if($preco_venda < $preco_compra)
+			$preco_venda_verifica = converteNumero($preco_venda);
+			$preco_compra_verifica =  converteNumero($preco_compra);
+			
+			if($preco_venda_verifica < $preco_compra_verifica)
 			{
 				$msg = "[AVISO] O preço de venda não pode ser menor que o preço da compra!";
 				header("location: produtos.php?msg=$msg&erro=1");
@@ -38,7 +41,7 @@
 				if(!empty($_FILES['imagem_produto']['name']))
 				{
 					$extensao = pathinfo($_FILES['imagem_produto']['name'], PATHINFO_EXTENSION);
-					if(strtolower($extensao) == "jpg" || strtolower($extensao) == "png")
+					if(strtolower($extensao) == "jpg" || strtolower($extensao) == "png" || strtolower($extensao) == "jpeg")
 					{
 						$caminho  = "img/produtos/" . md5(time()) . "." . $extensao;
 						move_uploaded_file($_FILES['imagem_produto']['tmp_name'], $caminho);
@@ -133,7 +136,14 @@
 		default:
 			$produtos = lista_produtos($conn);
 	}
-
+	
+	function converteNumero($numero)
+	{
+		$numero = str_replace(".", "", $numero);
+		$numero = str_replace(",", ".", $numero);
+		
+		return (float)$numero;
+	}
 ?>
 <script>
 
@@ -297,8 +307,7 @@ function valida(f)
 	var ret;
 	if(f.nome.value == "")
 		ret = exibeMensagem(f.nome, "Por favor, preencha o campo nome!")
-	
-	if(f.preco_venda.value < f.preco_compra.value)
+	if(converteNumero(f.preco_venda.value) < converteNumero(f.preco_compra.value))
 		ret = exibeMensagem(f.preco_venda, "[ATENÇÃO]\nO preço de venda não pode ser menor que o preço da compra!", true)
 		
 	if(f.preco_compra.value == "")
@@ -314,6 +323,14 @@ function valida(f)
 		ret = exibeMensagem(f.descricao, "Por favor, escolha a descrição do produto!")
 	
 	return ret;
+}
+
+function converteNumero(numero)
+{
+	numero = numero.replace(".", "");
+	numero = numero.replace(",", ".");
+	
+	return parseFloat(numero);
 }
 
 function exibeMensagem(elemento, mensagem, mostra_msg = false)
@@ -357,7 +374,7 @@ function exibeMensagem(elemento, mensagem, mostra_msg = false)
 <section class="content-header">
   <h1>
     Produtos
-    <small>listagem de produtos</small>
+    <small>Estoque de produtos</small>
   </h1>
 </section>
 
@@ -421,7 +438,7 @@ function exibeMensagem(elemento, mensagem, mostra_msg = false)
                 </div>
 
                 <div class="form-group col-md-6 col-sm-6 col-xs-12">
-                  <label>Preço de Compra:*</label>
+                  <label>Preço de Custo:*</label>
                   <input class="form-control" type="text" name="preco_compra" placeholder="R$ 0,00">
                 </div>
                 
@@ -483,10 +500,11 @@ function exibeMensagem(elemento, mensagem, mostra_msg = false)
 	                <div class="form-group col-xs-12">
 	                  <select class="tipo_produto form-control" name="id_produto">
 	                  	<option value="0">Selecione um produto</option>
-						<?php 
-							if(is_array($produtos) && count($produtos) > 0)
+						<?php
+							$produtos_lista_reposicao = lista_produtos($conn);
+							if(is_array($produtos_lista_reposicao) && count($produtos_lista_reposicao) > 0)
 							{
-								foreach ($produtos as $produto)
+								foreach ($produtos_lista_reposicao as $produto)
 								{
 						?>
 									<option value="<?php echo $produto['id_produto'];?>">
@@ -588,11 +606,11 @@ function exibeMensagem(elemento, mensagem, mostra_msg = false)
             <thead>
               <tr>
                 <th>Nome</th>
-                <th style="text-align:center;">Preço de Compra<br>por Unid.</th>
-                <th style="text-align:center;">Preço de Venda<br>por Unid.</th>
+                <th style="text-align:center;">Preço de Custo</th>
+                <th style="text-align:center;">Preço de Venda</th>
                 <th style="text-align:center;">Quantidade</th>
                 <th style="text-align:center;">Descrição</th>
-                <th style="text-align:center;">Preço Total<br>de Venda</th>
+                <th style="text-align:center;">Valor em Estoque</th>
 				<th style="text-align:center;">Editar</th>
                 <th style="text-align:center;">Deletar</th>
               </tr>
@@ -658,11 +676,10 @@ function exibeMensagem(elemento, mensagem, mostra_msg = false)
             <tbody style="border-top: none;">
 	            <tr>
 	            	<th colspan="5" style="text-align:right;">Total</th>
-	            	<th style="text-align:right;color: #2cb03c;">
+	            	<th align="left" colspan="3"style="color: #2cb03c;">
 	            	  	<i class="fa fa-usd"></i>
 	            		<?php echo number_format($total_compra, 2, ",", "."); ?>
 	            	</th>
-	            	<th colspan="2"></th>
 	            </tr>
             </tbody>
           </table>

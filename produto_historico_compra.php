@@ -46,7 +46,9 @@ switch ($action)
 		$historico_compras = lista_compra_produtos($conn);
 		$total 		 	 = total_compra_produtos($conn);
 }
-$total_venda = number_format($total[0]['total_compra'], 2, ',', '.');
+$total 		 = isset($total[0]['total_compra']) ? $total[0]['total_compra'] : 0;
+$total_venda = number_format($total, 2, ',', '.');
+
 ?>
 <script>
 
@@ -267,7 +269,6 @@ $(document).ready(function(){
 	            	  	<i class="fa fa-usd"></i>
 	            		<?php echo $total_venda; ?>
 	            	</th>
-	            	<th></th>
 	            </tr>
             </tbody>
           </table>
